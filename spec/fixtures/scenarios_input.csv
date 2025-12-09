@@ -1,0 +1,22 @@
+scenario_name,state,underwriter,transaction_type,purchase_price,loan_amount,policy_type,endorsements
+CA_TRG_Simple_Purchase,CA,TRG,purchase,500000,400000,standard,
+CA_TRG_Extended_Policy,CA,TRG,purchase,500000,400000,extended,
+CA_TRG_Homeowner_Policy,CA,TRG,purchase,500000,400000,homeowner,
+CA_TRG_With_Endorsements,CA,TRG,purchase,500000,400000,standard,"CLTA 115,ALTA 4.1"
+CA_TRG_Low_Value,CA,TRG,purchase,100000,80000,standard,
+CA_TRG_High_Value,CA,TRG,purchase,3000000,2500000,standard,
+CA_TRG_Loan_Exceeds_Purchase,CA,TRG,purchase,500000,600000,standard,
+CA_TRG_Refinance,CA,TRG,refinance,,400000,,
+CA_TRG_Refinance_High,CA,TRG,refinance,,2000000,,
+NC_INV_Simple_Purchase,NC,INVESTORS,purchase,500000,400000,standard,
+NC_INV_Extended_Policy,NC,INVESTORS,purchase,500000,400000,extended,
+NC_INV_Homeowner_Policy,NC,INVESTORS,purchase,500000,400000,homeowner,
+NC_INV_With_Endorsements,NC,INVESTORS,purchase,500000,400000,standard,"CLTA 115,ALTA 4.1"
+NC_INV_Low_Value,NC,INVESTORS,purchase,100000,80000,standard,
+NC_INV_High_Value,NC,INVESTORS,purchase,3000000,2500000,standard,
+NC_INV_Loan_Exceeds_Purchase,NC,INVESTORS,purchase,500000,600000,standard,
+NC_INV_Refinance,NC,INVESTORS,refinance,,400000,,
+NC_INV_Refinance_High,NC,INVESTORS,refinance,,2000000,,
+CA_TRG_Owner_Only,CA,TRG,purchase,500000,0,standard,
+NC_INV_Owner_Only,NC,INVESTORS,purchase,500000,0,standard,
+

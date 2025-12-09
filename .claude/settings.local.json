@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bd doctor:*)",
+      "Bash(git init:*)",
+      "Bash(bd init:*)",
+      "Bash(bd hooks install:*)",
+      "Bash(bd create:*)",
+      "Bash(bd dep:*)",
+      "Bash(bd update:*)",
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(bundle install:*)",
+      "Bash(bundle exec ruby:*)",
+      "Bash(bundle exec bin/title_round:*)",
+      "Bash(bundle exec rspec:*)",
+      "Bash(bd list:*)",
+      "Bash(bd close:*)",
+      "Bash(git add:*)",
+      "Bash(bd sync:*)",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nImplement TitleRound: California TRG title insurance premium calculator\n\n- Add SQLite database with models for rate tiers, refinance rates, endorsements, and policy types\n- Implement calculators: BaseRate (with 10K-up rounding), OwnersPolicy, LendersPolicy, Refinance, EndorsementCalculator\n- Add Calculator orchestrator supporting purchase and refinance transactions\n- Add ClosingDisclosure output formatter with JSON and text formats\n- Create Thor CLI with calculate, seed, and version commands\n- Seed data extracted from TRG Rate Manual (effective Sept 2025)\n\nKey features:\n- Owner policies: Standard (100%), Homeowner (110%), Extended (125%) of Schedule of Rates\n- Concurrent lender policy: $150 flat when loan ≤ owner liability\n- Increased liability calculation using Extended Lenders Concurrent Rate table\n- Residential refinance using special flat rate table\n- 45+ endorsements with flat, percentage, and no-charge pricing\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

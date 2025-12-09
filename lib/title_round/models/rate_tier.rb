@@ -1,0 +1,81 @@
+# frozen_string_literal: true
+
+require "date"
+
+module TitleRound
+  module Models
+    class RateTier
+      OVER_3M_BASE_CENTS = 421_100
+      OVER_3M_PER_10K_CENTS = 525
+      THREE_MILLION_CENTS = 300_000_000
+
+      attr_reader :id, :min_liability_cents, :max_liability_cents,
+                  :base_rate_cents, :per_thousand_cents, :extended_lender_concurrent_cents,
+                  :state_code, :underwriter_code, :effective_date, :expires_date
+
+      def initialize(attrs)
+        @id = attrs["id"]
+        @min_liability_cents = attrs["min_liability_cents"]
+        @max_liability_cents = attrs["max_liability_cents"]
+        @base_rate_cents = attrs["base_rate_cents"]
+        @per_thousand_cents = attrs["per_thousand_cents"]
+        @extended_lender_concurrent_cents = attrs["extended_lender_concurrent_cents"]
+        @state_code = attrs["state_code"]
+        @underwriter_code = attrs["underwriter_code"]
+        @effective_date = attrs["effective_date"]
+        @expires_date = attrs["expires_date"]
+      end
+
+      def self.find_by_liability(liability_cents, state:, underwriter:, as_of_date: Date.today)
+        as_of_date_str = as_of_date.is_a?(Date) ? as_of_date.to_s : as_of_date
+        row = Database.instance.get_first_row(
+          "SELECT * FROM rate_tiers WHERE min_liability_cents <= ? AND (max_liability_cents IS NULL OR max_liability_cents >= ?) AND state_code = ? AND underwriter_code = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents DESC LIMIT 1",
+          [liability_cents, liability_cents, state, underwriter, as_of_date_str, as_of_date_str]
+        )
+        row ? new(row) : nil
+      end
+
+      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
+        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS
+
+        tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
+        return 0 unless tier
+
+        tier.base_rate_cents
+      end
+
+      def self.calculate_extended_lender_concurrent_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
+        return calculate_elc_over_3m(liability_cents) if liability_cents > THREE_MILLION_CENTS
+
+        tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
+        return 0 unless tier
+
+        tier.extended_lender_concurrent_cents || 0
+      end
+
+      def self.calculate_over_3m_rate(liability_cents)
+        excess = liability_cents - THREE_MILLION_CENTS
+        increments = (excess / 1_000_000.0).ceil
+        OVER_3M_BASE_CENTS + (increments * OVER_3M_PER_10K_CENTS)
+      end
+
+      def self.calculate_elc_over_3m(liability_cents)
+        excess = liability_cents - THREE_MILLION_CENTS
+        increments = (excess / 1_000_000.0).ceil
+        75 + (increments * 75)
+      end
+
+      def self.seed(data, state_code:, underwriter_code:, effective_date:, expires_date: nil)
+        db = Database.instance
+        effective_date_str = effective_date.is_a?(Date) ? effective_date.to_s : effective_date
+        expires_date_str = expires_date.is_a?(Date) ? expires_date.to_s : expires_date
+        data.each do |row|
+          db.execute(
+            "INSERT OR IGNORE INTO rate_tiers (min_liability_cents, max_liability_cents, base_rate_cents, per_thousand_cents, extended_lender_concurrent_cents, state_code, underwriter_code, effective_date, expires_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [row[:min], row[:max], row[:base], row[:per_thousand], row[:elc], state_code, underwriter_code, effective_date_str, expires_date_str]
+          )
+        end
+      end
+    end
+  end
+end
