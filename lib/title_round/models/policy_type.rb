@@ -5,10 +5,18 @@ require "date"
 module TitleRound
   module Models
     class PolicyType
+      # Default types (used for CA/TRG)
       TYPES = {
         standard: { name: "standard", multiplier: 1.00 },
         homeowner: { name: "homeowner", multiplier: 1.10 },
         extended: { name: "extended", multiplier: 1.25 }
+      }.freeze
+
+      # NC-specific multipliers
+      NC_TYPES = {
+        standard: { name: "standard", multiplier: 1.00 },
+        homeowner: { name: "homeowner", multiplier: 1.20 },
+        extended: { name: "extended", multiplier: 1.20 }
       }.freeze
 
       attr_reader :id, :name, :multiplier, :state_code, :underwriter_code, :effective_date, :expires_date
@@ -37,15 +45,28 @@ module TitleRound
         policy&.multiplier || TYPES.dig(type.to_sym, :multiplier) || 1.0
       end
 
-      def self.seed(state_code:, underwriter_code:, effective_date:, expires_date: nil)
+      def self.seed(state_code:, underwriter_code:, effective_date:, expires_date: nil, types: nil)
         db = Database.instance
         effective_date_str = effective_date.is_a?(Date) ? effective_date.to_s : effective_date
         expires_date_str = expires_date.is_a?(Date) ? expires_date.to_s : expires_date
-        TYPES.each_value do |type|
+
+        # Use state-specific types if provided, otherwise use state default
+        types_to_seed = types || state_specific_types(state_code)
+
+        types_to_seed.each_value do |type|
           db.execute(
             "INSERT OR IGNORE INTO policy_types (name, multiplier, state_code, underwriter_code, effective_date, expires_date) VALUES (?, ?, ?, ?, ?, ?)",
             [type[:name], type[:multiplier], state_code, underwriter_code, effective_date_str, expires_date_str]
           )
+        end
+      end
+
+      def self.state_specific_types(state_code)
+        case state_code
+        when "NC"
+          NC_TYPES
+        else
+          TYPES
         end
       end
     end

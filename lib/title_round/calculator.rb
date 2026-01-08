@@ -6,7 +6,8 @@ module TitleRound
   class Calculator
     attr_reader :transaction_type, :property_address, :purchase_price_cents,
                 :loan_amount_cents, :owner_policy_type, :include_lenders_policy,
-                :endorsement_codes, :state, :underwriter, :as_of_date
+                :endorsement_codes, :state, :underwriter, :as_of_date,
+                :include_cpl, :prior_policy_date, :prior_policy_amount_cents
 
     def initialize(params)
       @transaction_type = params[:transaction_type]&.to_sym || :purchase
@@ -19,6 +20,9 @@ module TitleRound
       @state = params[:state] || raise(Error, "state is required")
       @underwriter = params[:underwriter] || raise(Error, "underwriter is required")
       @as_of_date = params[:as_of_date] || Date.today
+      @include_cpl = params.fetch(:include_cpl, false)
+      @prior_policy_date = params[:prior_policy_date]
+      @prior_policy_amount_cents = params[:prior_policy_amount_cents]&.to_i
     end
 
     def calculate
@@ -38,8 +42,9 @@ module TitleRound
       owners = calculate_owners_policy
       lenders = include_lenders_policy ? calculate_lenders_policy(owners[:liability_cents]) : nil
       endorsements = calculate_endorsements(lenders.nil? ? false : true)
+      cpl = include_cpl ? calculate_cpl(owners[:liability_cents]) : nil
 
-      build_result(owners, lenders, endorsements)
+      build_result(owners, lenders, endorsements, cpl)
     end
 
     def calculate_refinance
@@ -67,14 +72,17 @@ module TitleRound
         policy_type: owner_policy_type,
         state: state,
         underwriter: underwriter,
-        as_of_date: as_of_date
+        as_of_date: as_of_date,
+        prior_policy_date: prior_policy_date,
+        prior_policy_amount_cents: prior_policy_amount_cents
       )
 
       {
         type: owner_policy_type.to_s,
         liability_cents: owner_liability,
         premium_cents: calc.calculate,
-        line_item: calc.line_item
+        line_item: calc.line_item,
+        reissue_discount_cents: calc.reissue_discount_amount
       }
     end
 
@@ -111,10 +119,25 @@ module TitleRound
       calc.calculate
     end
 
-    def build_result(owners, lenders, endorsements)
+    def calculate_cpl(owner_liability_cents)
+      calc = Calculators::CPLCalculator.new(
+        liability_cents: owner_liability_cents,
+        state: state,
+        underwriter: underwriter,
+        as_of_date: as_of_date
+      )
+
+      {
+        amount_cents: calc.calculate,
+        line_item: calc.line_item
+      }
+    end
+
+    def build_result(owners, lenders, endorsements, cpl = nil)
       title_insurance_cents = [owners&.dig(:premium_cents), lenders&.dig(:premium_cents)].compact.sum
       endorsements_cents = endorsements.sum { |e| e[:amount_cents] }
-      grand_total_cents = round_up_to_dollar(title_insurance_cents + endorsements_cents)
+      cpl_cents = cpl&.dig(:amount_cents) || 0
+      grand_total_cents = round_up_to_dollar(title_insurance_cents + endorsements_cents + cpl_cents)
 
       Output::ClosingDisclosure.new(
         transaction: {
@@ -126,9 +149,11 @@ module TitleRound
         owners_policy: owners,
         lenders_policy: lenders,
         endorsements: endorsements,
+        cpl: cpl,
         totals: {
           title_insurance_cents: title_insurance_cents,
           endorsements_cents: endorsements_cents,
+          cpl_cents: cpl_cents,
           grand_total_cents: grand_total_cents
         }
       )

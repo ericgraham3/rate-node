@@ -68,3 +68,18 @@ CREATE TABLE IF NOT EXISTS policy_types (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_policy_types_unique ON policy_types(name, state_code, underwriter_code, effective_date);
 CREATE INDEX IF NOT EXISTS idx_policy_types_jurisdiction ON policy_types(state_code, underwriter_code, effective_date);
+
+-- Closing Protection Letter (CPL) / Closing Services Insurance rates
+CREATE TABLE IF NOT EXISTS cpl_rates (
+  id INTEGER PRIMARY KEY,
+  state_code VARCHAR(2) NOT NULL,
+  underwriter_code VARCHAR(50) NOT NULL,
+  min_liability_cents INTEGER NOT NULL,
+  max_liability_cents INTEGER,
+  rate_per_thousand_cents INTEGER NOT NULL,
+  effective_date DATE NOT NULL DEFAULT '2024-01-01',
+  expires_date DATE
+);
+
+CREATE INDEX IF NOT EXISTS idx_cpl_rates_lookup ON cpl_rates(state_code, underwriter_code, min_liability_cents, effective_date);
+CREATE INDEX IF NOT EXISTS idx_cpl_rates_jurisdiction ON cpl_rates(state_code, underwriter_code, effective_date);

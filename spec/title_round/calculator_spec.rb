@@ -7,6 +7,8 @@ RSpec.describe TitleRound::Calculator do
     context "purchase transaction with concurrent lender policy" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :purchase,
           purchase_price_cents: 50_000_000,
           loan_amount_cents: 40_000_000,
@@ -35,6 +37,8 @@ RSpec.describe TitleRound::Calculator do
     context "purchase with extended owner policy (125%)" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :purchase,
           purchase_price_cents: 50_000_000,
           loan_amount_cents: 40_000_000,
@@ -51,6 +55,8 @@ RSpec.describe TitleRound::Calculator do
     context "purchase with homeowner policy (110%)" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :purchase,
           purchase_price_cents: 50_000_000,
           loan_amount_cents: 40_000_000,
@@ -67,6 +73,8 @@ RSpec.describe TitleRound::Calculator do
     context "purchase with loan exceeding owner liability" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :purchase,
           purchase_price_cents: 50_000_000,
           loan_amount_cents: 60_000_000,
@@ -83,6 +91,8 @@ RSpec.describe TitleRound::Calculator do
     context "refinance transaction" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :refinance,
           loan_amount_cents: 40_000_000
         ).calculate
@@ -100,6 +110,8 @@ RSpec.describe TitleRound::Calculator do
     context "purchase without lender policy" do
       subject(:result) do
         described_class.new(
+          state: "CA",
+          underwriter: "TRG",
           transaction_type: :purchase,
           purchase_price_cents: 50_000_000,
           loan_amount_cents: 0,

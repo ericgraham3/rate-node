@@ -107,6 +107,18 @@ module TitleRound
           effective_date DATE NOT NULL DEFAULT '2024-01-01',
           expires_date DATE
         );
+
+        -- Closing Protection Letter (CPL) / Closing Services Insurance rates
+        CREATE TABLE IF NOT EXISTS cpl_rates (
+          id INTEGER PRIMARY KEY,
+          state_code VARCHAR(2) NOT NULL,
+          underwriter_code VARCHAR(50) NOT NULL,
+          min_liability_cents INTEGER NOT NULL,
+          max_liability_cents INTEGER,
+          rate_per_thousand_cents INTEGER NOT NULL,
+          effective_date DATE NOT NULL DEFAULT '2024-01-01',
+          expires_date DATE
+        );
       SQL
 
       @connection.execute_batch(tables_sql)
@@ -195,13 +207,18 @@ module TitleRound
       # Create all indexes
       indexes = [
         "CREATE INDEX IF NOT EXISTS idx_rate_tiers_liability ON rate_tiers(min_liability_cents, max_liability_cents)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_tiers_unique ON rate_tiers(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date)",
         "CREATE INDEX IF NOT EXISTS idx_rate_tiers_jurisdiction ON rate_tiers(state_code, underwriter_code, effective_date)",
         "CREATE INDEX IF NOT EXISTS idx_refinance_rates_liability ON refinance_rates(min_liability_cents, max_liability_cents)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_refinance_rates_unique ON refinance_rates(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date)",
         "CREATE INDEX IF NOT EXISTS idx_refinance_rates_jurisdiction ON refinance_rates(state_code, underwriter_code, effective_date)",
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_endorsements_code_jurisdiction ON endorsements(code, state_code, underwriter_code, effective_date)",
         "CREATE INDEX IF NOT EXISTS idx_endorsements_jurisdiction ON endorsements(state_code, underwriter_code, effective_date)",
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_policy_types_unique ON policy_types(name, state_code, underwriter_code, effective_date)",
-        "CREATE INDEX IF NOT EXISTS idx_policy_types_jurisdiction ON policy_types(state_code, underwriter_code, effective_date)"
+        "CREATE INDEX IF NOT EXISTS idx_policy_types_jurisdiction ON policy_types(state_code, underwriter_code, effective_date)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_cpl_rates_unique ON cpl_rates(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date)",
+        "CREATE INDEX IF NOT EXISTS idx_cpl_rates_lookup ON cpl_rates(state_code, underwriter_code, min_liability_cents, effective_date)",
+        "CREATE INDEX IF NOT EXISTS idx_cpl_rates_jurisdiction ON cpl_rates(state_code, underwriter_code, effective_date)"
       ]
 
       indexes.each do |index_sql|

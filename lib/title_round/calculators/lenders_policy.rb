@@ -5,7 +5,10 @@ require "date"
 module TitleRound
   module Calculators
     class LendersPolicy
-      CONCURRENT_BASE_FEE_CENTS = 15_000
+      # CA concurrent fee: $150
+      CA_CONCURRENT_BASE_FEE_CENTS = 15_000
+      # NC concurrent fee: $28.50
+      NC_CONCURRENT_BASE_FEE_CENTS = 2_850
 
       attr_reader :loan_amount_cents, :owner_liability_cents, :concurrent, :state, :underwriter, :as_of_date
 
@@ -39,15 +42,25 @@ module TitleRound
       end
 
       def calculate_concurrent
-        return CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
-
-        calculate_increased_liability
+        case state
+        when "NC"
+          # NC: Always $28.50 flat fee when concurrent, regardless of loan vs owner amount
+          NC_CONCURRENT_BASE_FEE_CENTS
+        when "CA"
+          # CA: $150 if loan <= owner, or $150 + ELC if loan > owner
+          return CA_CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
+          calculate_increased_liability
+        else
+          # Default to CA logic for unknown states
+          return CA_CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
+          calculate_increased_liability
+        end
       end
 
       def calculate_increased_liability
         excess = loan_amount_cents - owner_liability_cents
         elc_rate = BaseRate.new(excess, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate_elc
-        CONCURRENT_BASE_FEE_CENTS + elc_rate
+        CA_CONCURRENT_BASE_FEE_CENTS + elc_rate
       end
     end
   end

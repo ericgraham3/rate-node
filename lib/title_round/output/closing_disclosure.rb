@@ -3,13 +3,14 @@
 module TitleRound
   module Output
     class ClosingDisclosure
-      attr_reader :transaction, :owners_policy, :lenders_policy, :endorsements, :totals
+      attr_reader :transaction, :owners_policy, :lenders_policy, :endorsements, :cpl, :totals
 
-      def initialize(transaction:, owners_policy:, lenders_policy:, endorsements:, totals:)
+      def initialize(transaction:, owners_policy:, lenders_policy:, endorsements:, totals:, cpl: nil)
         @transaction = transaction
         @owners_policy = owners_policy
         @lenders_policy = lenders_policy
         @endorsements = endorsements
+        @cpl = cpl
         @totals = totals
       end
 
@@ -19,6 +20,7 @@ module TitleRound
           owners_policy: owners_policy,
           lenders_policy: lenders_policy,
           endorsements: endorsements,
+          cpl: cpl,
           totals: totals
         }
       end
@@ -55,7 +57,16 @@ module TitleRound
           lines << "OWNER'S POLICY"
           lines << "  #{owners_policy[:line_item]}"
           lines << "  Liability: #{format_currency(owners_policy[:liability_cents])}"
-          lines << "  Premium: #{format_currency(owners_policy[:premium_cents])}"
+
+          # Show reissue discount breakdown if applicable
+          if owners_policy[:reissue_discount_cents] && owners_policy[:reissue_discount_cents] > 0
+            base_premium = owners_policy[:premium_cents] + owners_policy[:reissue_discount_cents]
+            lines << "  Base Premium: #{format_currency(base_premium)}"
+            lines << "  Less: Reissue Discount (50%): -#{format_currency(owners_policy[:reissue_discount_cents])}"
+            lines << "  Net Premium: #{format_currency(owners_policy[:premium_cents])}"
+          else
+            lines << "  Premium: #{format_currency(owners_policy[:premium_cents])}"
+          end
         end
 
         if lenders_policy
@@ -74,11 +85,18 @@ module TitleRound
           end
         end
 
+        if cpl && cpl[:amount_cents] && cpl[:amount_cents] > 0
+          lines << ""
+          lines << "CLOSING PROTECTION LETTER"
+          lines << "  #{cpl[:line_item]}: #{format_currency(cpl[:amount_cents])}"
+        end
+
         lines << ""
         lines << "-" * 50
         lines << "TOTALS"
         lines << "  Title Insurance: #{format_currency(totals[:title_insurance_cents])}"
         lines << "  Endorsements: #{format_currency(totals[:endorsements_cents])}" unless endorsements.empty?
+        lines << "  CPL: #{format_currency(totals[:cpl_cents])}" if totals[:cpl_cents] && totals[:cpl_cents] > 0
         lines << "  GRAND TOTAL: #{format_currency(totals[:grand_total_cents])}"
         lines << "=" * 50
 
