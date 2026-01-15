@@ -1,0 +1,62 @@
+﻿Form,Endorsements,Premium,Rate Rule,Policy Type,Code
+T-3,Assignment of Mortgage,the minimum Basic Premium Rate plus $100 per year between the issuance of the endorsement and the policy,R-11(a)/P-9b(1-2),MTP,0211
+T-3,Down Date of Construction Loan Policy,$50 paid first,R-11c/P-9b(4),,0920
+T-3,Interim Construction Loan Binder Extension,$25 for each 6-month extension but not greater than 36 months,R-13a/P-16,,8021
+T-3,Down Date of (OTP) During Construction - Non-Res,$100 paid first,R-15/P-9a(3),OTP,0101
+T-3,Down Date of (OTP) During Construction - Res,$50 paid first,R-15/P-9a(3),OTP,0940
+T-3,Limited Coverage Jr. Loan Additional Coverage,$25 ,R-27b/P-46b(1),MTP,0880
+T-3,Downdate of Interim Constr. Loan Binder,$50 paid first,R-11c/P-9b(4),MTP,0100
+T-3,Completion of Improvements,No Charge,R-16/R-29/P-8.a.2/P-8.b2/P-50,MTP,0550
+T-4,Leasehold Owner,No Charge,None/P-9a(1),OTP,0820
+T-4R,Residential Leasehold,No Charge,None/P-9a(1),OTP,0821
+T-5,Leasehold Loan,No Charge,None/P-9b(5),MTP,0822
+T-14,First Loss,$25 ,R-11(i)/P-9b(11),MTP,0881
+T-16,Loan Policy Aggregation,$25 ,R-11(j)/P-9b(13),MTP,0883
+T-17,Planned Unit Development,$25 (only charge for 1 if issuing mult.),R-11(k)/P-9b(14),MTP,0884
+T-19,"Restrictions, Encroachments & Minerals - Res",5% of Basic Rate; min. $50,R-29(a)/P-50(a),MTP,0885
+T-19,"Restrictions, Encroachments & Minerals - Non-Res",10% of Basic Rate; min. $50,R-29(b)/P-50(b),MTP,0886
+T-19.1,"Restrictions, Encroachments & Minerals-Non Res.",10% of Basic Rate w/survey amendment; min. $50,R-29d.2,OTP,0895
+T-19.1,"Restrictions, Encroachments & Mineral-Non Res.",15% of Basic Rate,R-29d.1,OTP,0889
+T-19.1,"Restrictions, Encroachments & Minerals - Res.",10% of Basic Rate; min. $50,R-29c.1/P-50c,OTP,0897
+T-19.1,"Restrictions, Encroachments & Minerals - Non- Res.",5% of basic rate w/survey amendment; min. $50,R-29c.2/P-50c,OTP,0898
+T-19.2,Mineral & Surface Damage - Res.,$50 ,R-29.1.A,OTP,0801
+T-19.2,Mineral & Surface Damage - Res.,No charge,R-29.1.A,MTP,0802
+T-19.3,Mineral & Surface Damage - Non Res.,$50 ,R-29.1,OTP,0803
+T-19.3,Mineral & Surface Damage - Non  Res.,No charge,R-29.1,MTP,0804
+T-19.4,Energy Project-Minerals & Surface Damage,5% of the Basic Premium Rate,R-29.2/P-50.2,MTP,0807
+T-23,Access Endorsement,$100 for each Access Endorsement issued under a policy,R-30/P-54,OTP/MTP,0890
+T-24,Non-Imputation Endorsement,5% of Basic Rate; min. $25,R-31/P-55,OTP,0891
+T-25,Contiguity Endorsement,$100 ,R-32/P/56,OTP/MTP,0892
+T-26,Additional Insured Endorsement,10% of the Basic Rate; min. $25,R-33/P-57,OTP,0893
+T-27,Assignment of Rents/Leases,No Charge,R-34/P-60,MTP,0894
+T-28,Condominium Endorsement,No Charge/ May not issue PUD T-17 ,R-11(m)/P-9b(15),MTP,0888
+T-30,Tax Deletion - Loan Policy & ICB,$20 ,R-19/P-20,MTP,0700
+,Not Yet Due and Payable Tax Amendment,$5 ,R-24,MTP,0710
+T-31,Manufactured Housing,$20 ,R-11(e)/P-9b(7),MTP,0150
+T-31.1,MHU Supplemental Coverage,$50 ,R-11(e)/P-9b(7),MTP,0151
+T-31.1,MHU Supplemental Coverage,$50 ,R-15/P-9a(4),OTP,0152
+T-33,Variable Rate Mortgage,$20 without interest coverage,R-11(d)/P-9b(6),MTP,0140
+,,No Charge with interest coverage,R-4(d)/P-9b(6),,0141
+T-33.1,Variable Rate Mortgage-Negative Amortiz.,$20 ,R-11(d)/P-9b(6),MTP,0142
+,,No Charge,R-11(d)/P-9b(6),,0143
+T-34,Increased Value Endorsement,"Basic Rate of new policy, less the Basic Rate of old policy (plus any T-34 End. previously attached); min. Basic Rate",R-15.1/P-9a(2),OTP,0960
+T-35,Revolving Credit,$50 ,R-11(f)/P-9b(8),MTP,0800
+T-36,Environmental Protection Lien,$25 Residential Purpose,R-11(g)/P-9b(9),MTP,0810
+T-38,Partial Release Modification,Current Minimum Basic Rate  plus $25 per year between issuance of endorsement and policy.,R-11(b)/P-9b(3),MTP,0311
+T-39,Balloon Mortgage,$25 issued with MTP,R-11(h)/P-9b(10),MTP,0411
+,,$50 subsequent to MTP,R-11(h)/P-9b(10),,0412
+T-42,Equity Loan Mortgage Endorsement,10% of Basic Rate,R-28/P-44,MTP,0875
+T-42.1,Equity Loan Supplemental Coverage MTP,15% of Basic Rate,R-28(b)/P-47,MTP,0876
+T-43,Texas Reverse Mortgage,No Charge,None/P-45,MTP,0877
+T-45,Limited Coverage Jr. Mortg. Down Date,$50 ,R-27c/P-46c,MTP,0879
+T-46,Limited Coverage Jr. Mortg. Variable Rate,$25 ,R-27(d)/P-46(d),MTP,0878
+T-54,Severable Improvements,5% of Basic Premium Rate,R-37.A./P-72,MTP,0831
+T-55,Energy Project – Leasehold/Easement ,5% of Basic Premium Rate,R-37.B./P-72,OTP,0832
+T-55.1,Energy Project – Leasehold/Easement ,5% of Basic Premium Rate,R-37.C./P-72,MTP,0833
+T-55.2,Energy Project – Leasehold,5% of Basic Premium Rate,R-37.D./P-72,OTP,0834
+T-55.3,Energy Project – Leasehold,5% of Basic Premium Rate,R-37.E./P-72,MTP,0835
+T-55.4,Energy Project – Fee Estate,5% of Basic Premium Rate,R-37.F./P-72,OTP,0836
+T-55.5,Energy Project – Fee Estate,5% of Basic Premium Rate,R-37.G./P-72,MTP,0837
+T-99,Limited Pre-Foreclosure Policy Down Date,$50 ,R-26(d)/P-43(B),MTP,0850
+,Survey amendment  -Res,5% of Basic Rate,R-16.B.2./P-1.u,OTP,0501
+,Survey amendment  -Non-Res,15% of Basic Rate,R-16.B.1/P-1.u,OTP,0500

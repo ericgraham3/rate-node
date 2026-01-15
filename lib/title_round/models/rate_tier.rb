@@ -11,7 +11,7 @@ module TitleRound
 
       attr_reader :id, :min_liability_cents, :max_liability_cents,
                   :base_rate_cents, :per_thousand_cents, :extended_lender_concurrent_cents,
-                  :state_code, :underwriter_code, :effective_date, :expires_date
+                  :state_code, :underwriter_code, :effective_date, :expires_date, :rate_type
 
       def initialize(attrs)
         @id = attrs["id"]
@@ -24,31 +24,47 @@ module TitleRound
         @underwriter_code = attrs["underwriter_code"]
         @effective_date = attrs["effective_date"]
         @expires_date = attrs["expires_date"]
+        @rate_type = attrs["rate_type"] || "premium"
       end
 
-      def self.find_by_liability(liability_cents, state:, underwriter:, as_of_date: Date.today)
+      def self.find_by_liability(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
         as_of_date_str = as_of_date.is_a?(Date) ? as_of_date.to_s : as_of_date
         row = Database.instance.get_first_row(
-          "SELECT * FROM rate_tiers WHERE min_liability_cents <= ? AND (max_liability_cents IS NULL OR max_liability_cents >= ?) AND state_code = ? AND underwriter_code = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents DESC LIMIT 1",
-          [liability_cents, liability_cents, state, underwriter, as_of_date_str, as_of_date_str]
+          "SELECT * FROM rate_tiers WHERE min_liability_cents <= ? AND (max_liability_cents IS NULL OR max_liability_cents >= ?) AND state_code = ? AND underwriter_code = ? AND rate_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents DESC LIMIT 1",
+          [liability_cents, liability_cents, state, underwriter, rate_type, as_of_date_str, as_of_date_str]
         )
         row ? new(row) : nil
       end
 
-      def self.all_tiers(state:, underwriter:, as_of_date: Date.today)
+      def self.all_tiers(state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
         as_of_date_str = as_of_date.is_a?(Date) ? as_of_date.to_s : as_of_date
         rows = Database.instance.execute(
-          "SELECT * FROM rate_tiers WHERE state_code = ? AND underwriter_code = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents ASC",
-          [state, underwriter, as_of_date_str, as_of_date_str]
+          "SELECT * FROM rate_tiers WHERE state_code = ? AND underwriter_code = ? AND rate_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents ASC",
+          [state, underwriter, rate_type, as_of_date_str, as_of_date_str]
         )
         rows.map { |row| new(row) }
       end
 
-      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
+      # Find basic rate (for TX endorsement calculations)
+      def self.find_basic_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
+        calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "basic")
+      end
+
+      # Find premium rate (what customer pays)
+      def self.find_premium_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
+        calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "premium")
+      end
+
+      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
         return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS
 
+        # TX uses formula-based calculation for policies > $100,000
+        if state == "TX" && liability_cents > 10_000_000
+          return calculate_tx_formula_rate(liability_cents)
+        end
+
         # Get all tiers to check if we should use tiered calculation
-        tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date)
+        tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type)
         return 0 if tiers.empty?
 
         # Check if this uses tiered per-thousand calculation (NC style)
@@ -56,8 +72,8 @@ module TitleRound
           # Tiered calculation: sum across all applicable brackets
           calculate_tiered_rate(liability_cents, tiers)
         else
-          # Single-tier calculation (CA style)
-          tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
+          # Single-tier calculation (CA/TX style)
+          tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type)
           return 0 unless tier
           tier.base_rate_cents
         end
@@ -110,14 +126,47 @@ module TitleRound
         75 + (increments * 75)
       end
 
-      def self.seed(data, state_code:, underwriter_code:, effective_date:, expires_date: nil)
+      # TX formula-based calculation for policies > $100,000
+      # Based on TX Title Insurance Basic Premium Rates (Effective July 1, 2025)
+      # Per PDF instructions: Round at each step
+      def self.calculate_tx_formula_rate(liability_cents)
+        liability_dollars = liability_cents / 100.0
+
+        # Determine which formula tier to use and calculate in dollars
+        # Round the multiplication result, then add base
+        # Rates are per $1,000 of liability: $5.4775/thousand for $100k-$1M range
+        result_dollars = case liability_dollars
+        when 0..100_000
+          # Should not reach here, handled by lookup table
+          0
+        when 100_001..1_000_000
+          ((liability_dollars - 100_000) * 0.0054775).round + 749
+        when 1_000_001..5_000_000
+          ((liability_dollars - 1_000_000) * 0.00390).round + 5_680
+        when 5_000_001..15_000_000
+          ((liability_dollars - 5_000_000) * 0.00321).round + 21_280
+        when 15_000_001..25_000_000
+          ((liability_dollars - 15_000_000) * 0.00229).round + 53_390
+        when 25_000_001..50_000_000
+          ((liability_dollars - 25_000_000) * 0.00137).round + 76_280
+        when 50_000_001..100_000_000
+          ((liability_dollars - 50_000_000) * 0.00124).round + 110_530
+        else # > 100_000_000
+          ((liability_dollars - 100_000_000) * 0.00112).round + 172_530
+        end
+
+        # Convert to cents
+        result_dollars * 100
+      end
+
+      def self.seed(data, state_code:, underwriter_code:, effective_date:, expires_date: nil, rate_type: "premium")
         db = Database.instance
         effective_date_str = effective_date.is_a?(Date) ? effective_date.to_s : effective_date
         expires_date_str = expires_date.is_a?(Date) ? expires_date.to_s : expires_date
         data.each do |row|
           db.execute(
-            "INSERT OR IGNORE INTO rate_tiers (min_liability_cents, max_liability_cents, base_rate_cents, per_thousand_cents, extended_lender_concurrent_cents, state_code, underwriter_code, effective_date, expires_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [row[:min], row[:max], row[:base], row[:per_thousand], row[:elc], state_code, underwriter_code, effective_date_str, expires_date_str]
+            "INSERT OR IGNORE INTO rate_tiers (min_liability_cents, max_liability_cents, base_rate_cents, per_thousand_cents, extended_lender_concurrent_cents, state_code, underwriter_code, effective_date, expires_date, rate_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [row[:min], row[:max], row[:base], row[:per_thousand], row[:elc], state_code, underwriter_code, effective_date_str, expires_date_str, rate_type]
           )
         end
       end

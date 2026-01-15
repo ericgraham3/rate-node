@@ -7,10 +7,12 @@ module TitleRound
     class Rates
       CA_TRG_EFFECTIVE_DATE = Date.new(2024, 1, 1)
       NC_TRG_EFFECTIVE_DATE = Date.new(2025, 10, 1)
+      TX_DEFAULT_EFFECTIVE_DATE = Date.new(2025, 7, 1)
 
       def self.seed_all
         seed_ca_trg
         seed_nc_trg
+        seed_tx_default
       end
 
       def self.seed_ca_trg
@@ -104,6 +106,62 @@ module TitleRound
 
       def self.seed_nc_trg_cpl_rates
         Models::CPLRate.seed(NC_TRG_CPL_RATES, state_code: "NC", underwriter_code: "TRG", effective_date: NC_TRG_EFFECTIVE_DATE, expires_date: nil)
+      end
+
+      # Texas - DEFAULT (Promulgated Rates)
+      def self.seed_tx_default
+        seed_tx_default_rate_tiers
+        seed_tx_default_endorsements
+        seed_tx_default_policy_types
+      end
+
+      def self.seed_tx_default_rate_tiers
+        # Seed both basic and premium rate tiers (same values for TX)
+        # Basic rates are used for endorsement calculations
+        # Premium rates are what customers pay
+        require_relative "tx_rates_full"
+
+        # Seed as 'basic' rate type
+        Models::RateTier.seed(
+          TX_DEFAULT::FULL_RATE_TIERS_DATA,
+          state_code: "TX",
+          underwriter_code: "DEFAULT",
+          effective_date: TX_DEFAULT_EFFECTIVE_DATE,
+          expires_date: nil,
+          rate_type: "basic"
+        )
+
+        # Seed as 'premium' rate type (same values)
+        Models::RateTier.seed(
+          TX_DEFAULT::FULL_RATE_TIERS_DATA,
+          state_code: "TX",
+          underwriter_code: "DEFAULT",
+          effective_date: TX_DEFAULT_EFFECTIVE_DATE,
+          expires_date: nil,
+          rate_type: "premium"
+        )
+      end
+
+      def self.seed_tx_default_endorsements
+        # Load and seed TX endorsements from CSV
+        require_relative "tx_data"
+        Models::Endorsement.seed(
+          TX_DEFAULT::ENDORSEMENTS,
+          state_code: "TX",
+          underwriter_code: "DEFAULT",
+          effective_date: TX_DEFAULT_EFFECTIVE_DATE,
+          expires_date: nil
+        )
+      end
+
+      def self.seed_tx_default_policy_types
+        # TX policy types (standard, homeowner if applicable)
+        Models::PolicyType.seed(
+          state_code: "TX",
+          underwriter_code: "DEFAULT",
+          effective_date: TX_DEFAULT_EFFECTIVE_DATE,
+          expires_date: nil
+        )
       end
 
       SCHEDULE_OF_RATES = [

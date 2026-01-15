@@ -22,6 +22,9 @@ module TitleRound
         when "CA"
           # CA uses flat fee (currently $0, can be adjusted)
           CA_FLAT_FEE_CENTS
+        when "TX"
+          # TX does not have CPL
+          0
         when "NC"
           # NC uses tiered rate structure
           Models::CPLRate.calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)

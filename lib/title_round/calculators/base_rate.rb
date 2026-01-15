@@ -25,6 +25,9 @@ module TitleRound
       end
 
       def rounded_liability
+        # TX does not round liabilities (uses exact amounts)
+        return @liability_cents if state == "TX"
+
         return @liability_cents if (@liability_cents % TEN_THOUSAND_CENTS).zero?
 
         ((@liability_cents / TEN_THOUSAND_CENTS) + 1) * TEN_THOUSAND_CENTS

@@ -1,8 +1,28 @@
 # TitleRound
 
-## Recent Updates (1/8/2026)
+## Known Issues 1/15/26
+- Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy needs is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
+- External validation sources (title company websites, titlehound) calculate the T-19 basic rate using the 2019 rates, not the 2025 rates; domain question as to whether this is intentional or a flaw with titlehound and external title company calculators
+
+## Recent Updates (1/15/2026)
 
 Today's changes:
+- **Added Texas (TX) promulgated rates** (effective July 1, 2025)
+- **TX Owner's Policy**: Formula-based calculation for policies over $100,000
+  - $100,001 - $1,000,000: $5.4775 per $1,000 + $749 base
+  - Higher tiers have progressively lower per-thousand rates
+- **TX Simultaneous Issue Lender's Policy**: $100 flat fee (when loan ≤ owner liability)
+- **TX Endorsements**: 58 endorsements loaded from promulgated rate manual
+  - Refactored endorsement system to use unique codes (e.g., "0885") instead of form numbers
+  - Multiple variants per form now supported (e.g., T-19.1 has 4 variants with different rates)
+  - Added `form_code` field for display, `code` field for unique lookup
+- **TX CPL**: Not applicable (no charge)
+- **No liability rounding for TX**: Texas uses exact liability amounts (unlike CA/NC which round up to next $10,000)
+
+---
+
+## Previous Updates (1/8/2026)
+
 - **Updated NC underwriter from INVESTORS to TRG** (Chicago Title rates effective Oct 1, 2025)
 - **Implemented Chicago Title tiered rate structure** for NC: $2.78/$2.17/$1.41/$1.08/$0.75 per thousand across 5 tiers
 - **Added NC-specific endorsement pricing**: ALTA 5, ALTA 8.1, and ALTA 9 now charge $23.00 flat fee (vs no-charge in CA)
@@ -16,7 +36,7 @@ Today's changes:
 
 ---
 
-Multi-state title insurance premium calculator supporting multiple states and underwriters with date-based rate versioning. Currently includes California (TRG) and North Carolina (Chicago Title/TRG) rate tables.
+Multi-state title insurance premium calculator supporting multiple states and underwriters with date-based rate versioning. Currently includes California (TRG), North Carolina (Chicago Title/TRG), and Texas (promulgated rates) rate tables.
 
 ## Setup
 
@@ -91,6 +111,21 @@ bundle exec bin/title_round calculate \
   --prior_policy_date=2020-01-01 \
   --endorsements="ALTA 8.1,ALTA 9"
 
+# Texas (promulgated rates) - uses formula-based calculation
+bundle exec bin/title_round calculate \
+  --state TX \
+  --underwriter DEFAULT \
+  --purchase_price=500000 \
+  --loan_amount=400000
+
+# TX with endorsements (use code for specific variant)
+bundle exec bin/title_round calculate \
+  --state TX \
+  --underwriter DEFAULT \
+  --purchase_price=500000 \
+  --loan_amount=400000 \
+  --endorsements="0885,0890"
+
 # With specific effective date (for historical calculations)
 bundle exec bin/title_round calculate \
   --state CA \
@@ -144,6 +179,26 @@ result_nc = TitleRound.calculate(
   prior_policy_date: Date.new(2020, 1, 1)
 )
 
+# Texas (promulgated rates)
+result_tx = TitleRound.calculate(
+  state: "TX",
+  underwriter: "DEFAULT",               # TX uses state-regulated rates
+  transaction_type: :purchase,
+  purchase_price_cents: 50_000_000,     # $500,000
+  loan_amount_cents: 40_000_000,        # $400,000
+  owner_policy_type: :standard,
+  include_lenders_policy: true,
+  endorsement_codes: ['0885', '0890']   # TX uses numeric codes for endorsements
+)
+
+# TX endorsement lookup by form (returns all variants)
+variants = TitleRound::Models::Endorsement.find_by_form_code(
+  "T-19.1",
+  state: "TX",
+  underwriter: "DEFAULT"
+)
+# Returns 4 variants: 0889 (15%), 0895 (10%), 0897 (10%), 0898 (5%)
+
 # Structured hash for closing disclosure integration
 result.to_h
 
@@ -179,6 +234,24 @@ NC uses a tiered calculation (like progressive tax brackets):
 - $2,000,001 to $7,000,000: add $1.08 per thousand
 - $7,000,001 and above: add $0.75 per thousand
 
+**Texas (Promulgated Rates):**
+| Type | Rate |
+|------|------|
+| Standard | 100% of basic premium rate |
+| Homeowner's | 100% of basic premium rate |
+
+TX uses formula-based calculation for policies over $100,000:
+- $25,000 to $100,000: Lookup table (flat rates per $500 increment)
+- $100,001 to $1,000,000: $5.4775 per $1,000 over $100,000 + $749
+- $1,000,001 to $5,000,000: $3.90 per $1,000 over $1,000,000 + $5,680
+- $5,000,001 to $15,000,000: $3.21 per $1,000 over $5,000,000 + $21,280
+- $15,000,001 to $25,000,000: $2.29 per $1,000 over $15,000,000 + $53,390
+- $25,000,001 to $50,000,000: $1.37 per $1,000 over $25,000,000 + $76,280
+- $50,000,001 to $100,000,000: $1.24 per $1,000 over $50,000,000 + $110,530
+- Over $100,000,000: $1.12 per $1,000 over $100,000,000 + $172,530
+
+**Note:** TX does not round liability amounts (uses exact values).
+
 ### Lender's Policies
 
 **California (TRG):**
@@ -194,6 +267,12 @@ NC uses a tiered calculation (like progressive tax brackets):
 | Concurrent (simultaneous issue) | $28.50 flat |
 | Refinance (1-4 family residential) | Special flat rate table |
 
+**Texas (Promulgated Rates):**
+| Scenario | Rate |
+|----------|------|
+| Simultaneous issue (loan ≤ owner liability) | $100 flat |
+| Simultaneous issue (loan > owner liability) | $100 + basic rate for excess |
+
 ### Closing Protection Letter (CPL)
 
 **California (TRG):** Not applicable
@@ -202,6 +281,8 @@ NC uses a tiered calculation (like progressive tax brackets):
 - Up to $100,000: $0.69 per thousand
 - $100,001 to $500,000: add $0.13 per thousand
 - $500,001 and above: add $0.00 per thousand
+
+**Texas (Promulgated Rates):** Not applicable (no charge)
 
 ### Reissue Discount
 
@@ -218,15 +299,36 @@ Some endorsements have state-specific pricing:
 - **ALTA 8.1** (Environmental Lien Protection): No charge (CA) | $23.00 flat (NC)
 - **ALTA 9** (Restrictions, Encroachments, Minerals): No charge (CA) | $23.00 flat (NC)
 
+**Texas Endorsements:**
+TX endorsements use a unique code system (not form numbers) because many forms have multiple rate variants:
+
+| Code | Form | Description | Rate |
+|------|------|-------------|------|
+| 0885 | T-19 | Restrictions, Encroachments & Minerals - Res | 5% of basic rate, min $50 |
+| 0886 | T-19 | Restrictions, Encroachments & Minerals - Non-Res | 10% of basic rate, min $50 |
+| 0889 | T-19.1 | Restrictions, Encroachments & Minerals - Non-Res | 15% of basic rate |
+| 0895 | T-19.1 | Restrictions, Encroachments & Minerals - Non-Res (w/survey) | 10% of basic rate, min $50 |
+| 0897 | T-19.1 | Restrictions, Encroachments & Minerals - Res | 10% of basic rate, min $50 |
+| 0898 | T-19.1 | Restrictions, Encroachments & Minerals - Non-Res (w/survey) | 5% of basic rate, min $50 |
+| 0890 | T-23 | Access Endorsement | $100 flat |
+| 0891 | T-24 | Non-Imputation Endorsement | 5% of basic rate, min $25 |
+
+Use `Endorsement.find_by_form_code("T-19.1", ...)` to find all variants of a form.
+
 ### Key Rounding Rules
 
-**Both California and North Carolina:**
+**California and North Carolina:**
 - Liability rounded UP to next $10,000 before rate lookup/calculation
 - Final premium rounded to nearest dollar
+
+**Texas:**
+- **No liability rounding** - uses exact liability amounts
+- Formula calculations round at each step, then multiply to cents
 
 **Difference in Calculation Method:**
 - **CA**: Uses rounded liability to look up flat rate from Schedule of Rates table
 - **NC**: Uses rounded liability to calculate across progressive tiered brackets (similar to tax brackets)
+- **TX**: Uses exact liability with formula-based calculation (lookup table for amounts up to $100k)
 
 ## Tests
 
