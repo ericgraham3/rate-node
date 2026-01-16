@@ -1,7 +1,7 @@
 # TitleRound
 
 ## Known Issues 1/15/26
-- Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy needs is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
+- Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
 - External validation sources (title company websites, titlehound) calculate the T-19 basic rate using the 2019 rates, not the 2025 rates; domain question as to whether this is intentional or a flaw with titlehound and external title company calculators
 
 ## Recent Updates (1/15/2026)
