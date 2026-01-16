@@ -3,7 +3,7 @@
 require "date"
 require "csv"
 
-module TitleRound
+module RateNode
   module Seeds
     # Texas - DEFAULT (Promulgated Rates) - Effective July 1, 2025
     # All underwriters in TX use identical state-regulated rates (underwriter_code: "DEFAULT")

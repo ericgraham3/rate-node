@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Models
     class RateTier
       OVER_3M_BASE_CENTS = 421_100

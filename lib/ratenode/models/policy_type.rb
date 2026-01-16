@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Models
     class PolicyType
       # Default types (used for CA/TRG)

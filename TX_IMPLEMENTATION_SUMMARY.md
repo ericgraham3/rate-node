@@ -8,25 +8,25 @@ Successfully implemented Texas title insurance support with promulgated rates (u
 ## Files Modified/Created
 
 ### Core Models & Database
-1. **`lib/title_round/database.rb`**
+1. **`lib/ratenode/database.rb`**
    - Added `rate_type` column to `rate_tiers` table (values: "basic", "premium")
    - Updated unique index to include `rate_type`
 
-2. **`lib/title_round/models/rate_tier.rb`**
+2. **`lib/ratenode/models/rate_tier.rb`**
    - Added `rate_type` attribute
    - Implemented `calculate_tx_formula_rate` for policies > $100,000
    - Added `find_basic_rate` and `find_premium_rate` helper methods
    - Updated `calculate_rate` to handle TX-specific logic
 
-3. **`lib/title_round/models/endorsement.rb`**
+3. **`lib/ratenode/models/endorsement.rb`**
    - Added `percentage_basic` to PRICING_TYPES
    - Implemented `calculate_percentage_basic_premium` method
 
 ### Calculators
-4. **`lib/title_round/calculators/cpl_calculator.rb`**
+4. **`lib/ratenode/calculators/cpl_calculator.rb`**
    - Added TX case to return $0 (TX has no CPL)
 
-5. **`lib/title_round/calculators/base_rate.rb`**
+5. **`lib/ratenode/calculators/base_rate.rb`**
    - Updated `rounded_liability` to NOT round for TX (uses exact amounts)
 
 ### Seed Data
@@ -157,14 +157,14 @@ Successfully implemented Texas title insurance support with promulgated rates (u
 ## Usage Example
 
 ```ruby
-require 'title_round'
+require 'ratenode'
 
 # Setup and seed
-TitleRound.setup_database
-TitleRound::Seeds::Rates.seed_all
+RateNode.setup_database
+RateNode::Seeds::Rates.seed_all
 
 # Calculate $300k TX owner's policy
-calc = TitleRound::Calculators::OwnersPolicy.new(
+calc = RateNode::Calculators::OwnersPolicy.new(
   liability_cents: 30_000_000,
   policy_type: :standard,
   state: "TX",
@@ -175,7 +175,7 @@ premium = calc.calculate
 # => 169700 cents ($1,697.00)
 
 # Add T-19 endorsement
-endorsement = TitleRound::Models::Endorsement.find_by_code(
+endorsement = RateNode::Models::Endorsement.find_by_code(
   "T-19",
   state: "TX",
   underwriter: "DEFAULT"

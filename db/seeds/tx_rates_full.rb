@@ -4,7 +4,7 @@
 # Texas Title Insurance Basic Premium Rates (Effective July 1, 2025)
 # This file is auto-generated from tx_rates.pdf
 
-module TitleRound
+module RateNode
   module Seeds
     module TX_DEFAULT
       # Full rate tier data for $25,000 to $100,000

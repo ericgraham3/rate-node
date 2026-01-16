@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class EndorsementCalculator
       attr_reader :endorsement_codes, :liability_cents, :concurrent, :state, :underwriter, :as_of_date

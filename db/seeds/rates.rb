@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Seeds
     class Rates
       CA_TRG_EFFECTIVE_DATE = Date.new(2024, 1, 1)

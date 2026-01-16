@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module TitleRound
+module RateNode
   module Output
     class ClosingDisclosure
       attr_reader :transaction, :owners_policy, :lenders_policy, :endorsements, :cpl, :totals

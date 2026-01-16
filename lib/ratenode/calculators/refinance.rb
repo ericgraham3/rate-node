@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class Refinance
       attr_reader :loan_amount_cents, :state, :underwriter, :as_of_date

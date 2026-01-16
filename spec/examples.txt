@@ -1,22 +1,22 @@
-example_id                                              | status | run_time        |
-------------------------------------------------------- | ------ | --------------- |
-./spec/integration/csv_scenarios_spec.rb[1:1]           | passed | 0.03609 seconds |
-./spec/title_round/calculator_spec.rb[1:1:1:1]          | passed | 0.00494 seconds |
-./spec/title_round/calculator_spec.rb[1:1:1:2]          | passed | 0.00297 seconds |
-./spec/title_round/calculator_spec.rb[1:1:1:3]          | passed | 0.00422 seconds |
-./spec/title_round/calculator_spec.rb[1:1:1:4]          | passed | 0.00327 seconds |
-./spec/title_round/calculator_spec.rb[1:1:2:1]          | passed | 0.00343 seconds |
-./spec/title_round/calculator_spec.rb[1:1:3:1]          | passed | 0.00287 seconds |
-./spec/title_round/calculator_spec.rb[1:1:4:1]          | passed | 0.00415 seconds |
-./spec/title_round/calculator_spec.rb[1:1:5:1]          | passed | 0.00097 seconds |
-./spec/title_round/calculator_spec.rb[1:1:5:2]          | passed | 0.00114 seconds |
-./spec/title_round/calculator_spec.rb[1:1:6:1]          | passed | 0.00322 seconds |
-./spec/title_round/calculator_spec.rb[1:1:6:2]          | passed | 0.00347 seconds |
-./spec/title_round/calculators/base_rate_spec.rb[1:1:1] | passed | 0.00005 seconds |
-./spec/title_round/calculators/base_rate_spec.rb[1:1:2] | passed | 0.00004 seconds |
-./spec/title_round/calculators/base_rate_spec.rb[1:1:3] | passed | 0.00119 seconds |
-./spec/title_round/calculators/base_rate_spec.rb[1:2:1] | passed | 0.00185 seconds |
-./spec/title_round/models/endorsement_spec.rb[1:1:1:1]  | passed | 0.00009 seconds |
-./spec/title_round/models/endorsement_spec.rb[1:1:2:1]  | passed | 0.00012 seconds |
-./spec/title_round/models/endorsement_spec.rb[1:1:3:1]  | passed | 0.00036 seconds |
-./spec/title_round/models/endorsement_spec.rb[1:1:4:1]  | passed | 0.00071 seconds |
+example_id                                           | status | run_time        |
+---------------------------------------------------- | ------ | --------------- |
+./spec/integration/csv_scenarios_spec.rb[1:1]        | passed | 0.05252 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:1:1]          | passed | 0.00513 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:1:2]          | passed | 0.00368 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:1:3]          | passed | 0.00425 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:1:4]          | passed | 0.00367 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:2:1]          | passed | 0.00387 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:3:1]          | passed | 0.00376 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:4:1]          | passed | 0.00485 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:5:1]          | passed | 0.00104 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:5:2]          | passed | 0.00119 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:6:1]          | passed | 0.00388 seconds |
+./spec/ratenode/calculator_spec.rb[1:1:6:2]          | passed | 0.00423 seconds |
+./spec/ratenode/calculators/base_rate_spec.rb[1:1:1] | passed | 0.00004 seconds |
+./spec/ratenode/calculators/base_rate_spec.rb[1:1:2] | passed | 0.00004 seconds |
+./spec/ratenode/calculators/base_rate_spec.rb[1:1:3] | passed | 0.00005 seconds |
+./spec/ratenode/calculators/base_rate_spec.rb[1:2:1] | passed | 0.00553 seconds |
+./spec/ratenode/models/endorsement_spec.rb[1:1:1:1]  | passed | 0.00113 seconds |
+./spec/ratenode/models/endorsement_spec.rb[1:1:2:1]  | passed | 0.00115 seconds |
+./spec/ratenode/models/endorsement_spec.rb[1:1:3:1]  | passed | 0.00378 seconds |
+./spec/ratenode/models/endorsement_spec.rb[1:1:4:1]  | passed | 0.00409 seconds |

@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   class Calculator
     attr_reader :transaction_type, :property_address, :purchase_price_cents,
                 :loan_amount_cents, :owner_policy_type, :include_lenders_policy,

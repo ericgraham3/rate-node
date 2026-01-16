@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Models
     class CPLRate
       attr_reader :id, :state_code, :underwriter_code,

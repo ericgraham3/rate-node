@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe TitleRound::Models::Endorsement do
+RSpec.describe RateNode::Models::Endorsement do
   describe "#calculate_premium" do
     context "flat fee endorsement" do
       let(:endorsement) { described_class.find_by_code("CLTA 115", state: "CA", underwriter: "TRG") }

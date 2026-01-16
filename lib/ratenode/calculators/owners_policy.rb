@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class OwnersPolicy
       attr_reader :liability_cents, :policy_type, :state, :underwriter, :as_of_date,

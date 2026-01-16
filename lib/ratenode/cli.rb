@@ -3,7 +3,7 @@
 require "thor"
 require "date"
 
-module TitleRound
+module RateNode
   class CLI < Thor
     desc "calculate", "Calculate title insurance premiums"
     option :type, type: :string, default: "purchase", desc: "Transaction type: purchase or refinance"
@@ -40,20 +40,20 @@ module TitleRound
       else
         puts result.to_s
       end
-    rescue TitleRound::Error => e
+    rescue RateNode::Error => e
       puts "Error: #{e.message}"
       exit 1
     end
 
     desc "seed", "Initialize database with rate tables"
     def seed
-      TitleRound.setup_database
+      RateNode.setup_database
       puts "Database seeded successfully!"
     end
 
     desc "version", "Show version"
     def version
-      puts "TitleRound v0.1.0"
+      puts "RateNode v0.1.0"
     end
 
     private
@@ -90,9 +90,9 @@ module TitleRound
     end
 
     def ensure_database!
-      return if TitleRound.db.connection
+      return if RateNode.db.connection
 
-      TitleRound.setup_database
+      RateNode.setup_database
     end
   end
 end

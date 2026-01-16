@@ -24,7 +24,8 @@
       "Bash(git commit:*)",
       "Bash(bundle exec rake:*)",
       "Bash(ruby -e:*)",
-      "Bash(ruby:*)"
+      "Bash(ruby:*)",
+      "Bash(bundle exec bin/ratenode:*)"
     ],
     "deny": [],
     "ask": []

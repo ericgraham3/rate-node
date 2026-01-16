@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe TitleRound::Calculator do
+RSpec.describe RateNode::Calculator do
   describe "#calculate" do
     context "purchase transaction with concurrent lender policy" do
       subject(:result) do
@@ -18,7 +18,7 @@ RSpec.describe TitleRound::Calculator do
       end
 
       it "returns a ClosingDisclosure" do
-        expect(result).to be_a(TitleRound::Output::ClosingDisclosure)
+        expect(result).to be_a(RateNode::Output::ClosingDisclosure)
       end
 
       it "calculates standard owner policy premium at 100% of schedule rate" do

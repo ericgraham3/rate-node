@@ -3,10 +3,10 @@
 
 require 'csv'
 require 'json'
-require_relative '../../lib/title_round'
+require_relative '../../lib/ratenode'
 
 # Initialize database
-TitleRound.setup_database
+RateNode.setup_database
 
 input_csv = File.join(__dir__, '../fixtures/scenarios_input.csv')
 output_csv = File.join(__dir__, '../fixtures/test_scenarios.csv')
@@ -61,7 +61,7 @@ scenarios.each do |scenario|
   
   # Calculate
   begin
-    result = TitleRound.calculate(params)
+    result = RateNode.calculate(params)
     
     owners_premium = result.owners_policy ? (result.owners_policy[:premium_cents] / 100.0) : 0.0
     lenders_premium = result.lenders_policy ? (result.lenders_policy[:premium_cents] / 100.0) : 0.0

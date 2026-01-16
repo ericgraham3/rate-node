@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class CPLCalculator
       # CA flat fee for CPL (if not using tiered rates)

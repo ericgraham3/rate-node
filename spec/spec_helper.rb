@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../lib/title_round"
+require_relative "../lib/ratenode"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -21,6 +21,6 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 
   config.before(:suite) do
-    TitleRound.setup_database(":memory:")
+    RateNode.setup_database(":memory:")
   end
 end

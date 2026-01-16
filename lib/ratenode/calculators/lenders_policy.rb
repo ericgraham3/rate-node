@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class LendersPolicy
       # CA concurrent fee: $150

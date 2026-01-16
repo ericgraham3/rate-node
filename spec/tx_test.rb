@@ -3,14 +3,14 @@
 
 # Test script for TX title insurance calculations
 
-require_relative "../lib/title_round"
+require_relative "../lib/ratenode"
 
 # Setup database in memory
-TitleRound.setup_database(":memory:")
+RateNode.setup_database(":memory:")
 
 # Seed all data (CA, NC, TX)
 puts "Seeding database..."
-TitleRound::Seeds::Rates.seed_all
+RateNode::Seeds::Rates.seed_all
 
 # Test 1: Calculate $300,000 TX owner's policy (standard)
 puts "\n=== Test 1: $300,000 TX Owner's Policy (Standard) ==="
@@ -18,7 +18,7 @@ liability_cents = 30_000_000  # $300,000
 state = "TX"
 underwriter = "DEFAULT"
 
-calc = TitleRound::Calculators::OwnersPolicy.new(
+calc = RateNode::Calculators::OwnersPolicy.new(
   liability_cents: liability_cents,
   policy_type: :standard,
   state: state,
@@ -39,7 +39,7 @@ puts "Match: #{premium_cents == expected_cents ? 'YES' : 'NO'}"
 
 # Test 2: Check CPL for TX (should be $0)
 puts "\n=== Test 2: CPL for TX (Should be $0) ==="
-cpl_calc = TitleRound::Calculators::CPLCalculator.new(
+cpl_calc = RateNode::Calculators::CPLCalculator.new(
   liability_cents: liability_cents,
   state: state,
   underwriter: underwriter
@@ -52,7 +52,7 @@ puts "Match expected ($0): #{cpl_cents == 0 ? 'YES' : 'NO'}"
 # Test 3: Find and test a percentage_basic endorsement
 puts "\n=== Test 3: Percentage_Basic Endorsement (by code) ==="
 # Find T-19 Residential endorsement by code 0885
-endorsement = TitleRound::Models::Endorsement.find_by_code("0885", state: state, underwriter: underwriter)
+endorsement = RateNode::Models::Endorsement.find_by_code("0885", state: state, underwriter: underwriter)
 
 if endorsement
   puts "Found: #{endorsement.code} (Form: #{endorsement.form_code}) - #{endorsement.name}"
@@ -67,7 +67,7 @@ if endorsement
   # Basic rate for $300k = $1,697 (same as premium for TX)
   # If 5% of basic: $1,697 * 0.05 = $84.85, with min $50 = $84.85
   if endorsement.percentage
-    basic_rate = TitleRound::Models::RateTier.find_basic_rate(liability_cents, state: state, underwriter: underwriter)
+    basic_rate = RateNode::Models::RateTier.find_basic_rate(liability_cents, state: state, underwriter: underwriter)
     expected_endo = (basic_rate * endorsement.percentage).ceil
     expected_endo = [expected_endo, endorsement.min_cents].max if endorsement.min_cents
     puts "Expected: $#{expected_endo / 100.0} (based on basic rate of $#{basic_rate / 100.0})"
@@ -79,7 +79,7 @@ end
 
 # Test 4: List all TX endorsements
 puts "\n=== Test 4: TX Endorsements Summary ==="
-all_endorsements = TitleRound::Models::Endorsement.all(state: state, underwriter: underwriter)
+all_endorsements = RateNode::Models::Endorsement.all(state: state, underwriter: underwriter)
 puts "Total TX endorsements: #{all_endorsements.length}"
 
 pricing_breakdown = all_endorsements.group_by(&:pricing_type).transform_values(&:count)
@@ -91,7 +91,7 @@ end
 puts "\n=== Test 5: $500,000 TX Policy (Formula-based) ==="
 large_liability = 50_000_000  # $500,000
 
-large_calc = TitleRound::Calculators::OwnersPolicy.new(
+large_calc = RateNode::Calculators::OwnersPolicy.new(
   liability_cents: large_liability,
   policy_type: :standard,
   state: state,

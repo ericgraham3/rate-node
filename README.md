@@ -1,4 +1,4 @@
-# TitleRound
+# RateNode
 
 ## Known Issues 1/15/26
 - Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy needs is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
@@ -49,14 +49,14 @@ bundle install
 ```bash
 # Purchase transaction (standard owner's policy + concurrent lender's)
 # State and underwriter are now required
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
   --loan_amount=400000
 
 # Extended owner's policy (125% of Schedule of Rates)
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
@@ -64,7 +64,7 @@ bundle exec bin/title_round calculate \
   --policy_type=extended
 
 # Homeowner's policy (110% of Schedule of Rates)
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
@@ -72,14 +72,14 @@ bundle exec bin/title_round calculate \
   --policy_type=homeowner
 
 # Refinance transaction
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --type=refinance \
   --loan_amount=400000
 
 # With endorsements
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
@@ -87,21 +87,21 @@ bundle exec bin/title_round calculate \
   --endorsements="CLTA 115,ALTA 4.1,CLTA 100"
 
 # Owner's policy only (no lender's)
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
   --no_lenders_policy
 
 # North Carolina Chicago Title (TRG) - uses tiered rate structure
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state NC \
   --underwriter TRG \
   --purchase_price=500000 \
   --loan_amount=400000
 
 # NC with CPL (Closing Protection Letter) and reissue discount
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state NC \
   --underwriter TRG \
   --purchase_price=60000 \
@@ -112,14 +112,14 @@ bundle exec bin/title_round calculate \
   --endorsements="ALTA 8.1,ALTA 9"
 
 # Texas (promulgated rates) - uses formula-based calculation
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state TX \
   --underwriter DEFAULT \
   --purchase_price=500000 \
   --loan_amount=400000
 
 # TX with endorsements (use code for specific variant)
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state TX \
   --underwriter DEFAULT \
   --purchase_price=500000 \
@@ -127,7 +127,7 @@ bundle exec bin/title_round calculate \
   --endorsements="0885,0890"
 
 # With specific effective date (for historical calculations)
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --as-of-date=2024-01-01 \
@@ -135,7 +135,7 @@ bundle exec bin/title_round calculate \
   --loan_amount=400000
 
 # JSON output
-bundle exec bin/title_round calculate \
+bundle exec bin/ratenode calculate \
   --state CA \
   --underwriter TRG \
   --purchase_price=500000 \
@@ -146,13 +146,13 @@ bundle exec bin/title_round calculate \
 ## Library Usage
 
 ```ruby
-require_relative 'lib/title_round'
+require_relative 'lib/ratenode'
 require 'date'
 
-TitleRound.setup_database
+RateNode.setup_database
 
 # State and underwriter are now required parameters
-result = TitleRound.calculate(
+result = RateNode.calculate(
   state: "CA",
   underwriter: "TRG",
   transaction_type: :purchase,
@@ -165,7 +165,7 @@ result = TitleRound.calculate(
 )
 
 # North Carolina Chicago Title (TRG) with CPL and reissue discount
-result_nc = TitleRound.calculate(
+result_nc = RateNode.calculate(
   state: "NC",
   underwriter: "TRG",
   transaction_type: :purchase,
@@ -180,7 +180,7 @@ result_nc = TitleRound.calculate(
 )
 
 # Texas (promulgated rates)
-result_tx = TitleRound.calculate(
+result_tx = RateNode.calculate(
   state: "TX",
   underwriter: "DEFAULT",               # TX uses state-regulated rates
   transaction_type: :purchase,
@@ -192,7 +192,7 @@ result_tx = TitleRound.calculate(
 )
 
 # TX endorsement lookup by form (returns all variants)
-variants = TitleRound::Models::Endorsement.find_by_form_code(
+variants = RateNode::Models::Endorsement.find_by_form_code(
   "T-19.1",
   state: "TX",
   underwriter: "DEFAULT"

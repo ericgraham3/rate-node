@@ -3,13 +3,13 @@
 require "sqlite3"
 require "singleton"
 
-module TitleRound
+module RateNode
   class Database
     include Singleton
 
     attr_reader :connection
 
-    DEFAULT_DB_PATH = File.expand_path("../../db/title_round.db", __dir__)
+    DEFAULT_DB_PATH = File.expand_path("../../db/ratenode.db", __dir__)
     SCHEMA_PATH = File.expand_path("../../db/schema.sql", __dir__)
 
     def initialize
@@ -35,13 +35,13 @@ module TitleRound
     end
 
     def execute(sql, params = [])
-      raise Error, "Database not initialized. Call TitleRound.setup_database first." unless @connection
+      raise Error, "Database not initialized. Call RateNode.setup_database first." unless @connection
 
       @connection.execute(sql, params)
     end
 
     def get_first_row(sql, params = [])
-      raise Error, "Database not initialized. Call TitleRound.setup_database first." unless @connection
+      raise Error, "Database not initialized. Call RateNode.setup_database first." unless @connection
 
       @connection.get_first_row(sql, params)
     end

@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Calculators
     class BaseRate
       TEN_THOUSAND_CENTS = 1_000_000

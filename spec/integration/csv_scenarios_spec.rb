@@ -9,7 +9,7 @@ RSpec.describe "CSV Scenario Testing" do
 
   before(:all) do
     # Use persistent database for integration tests
-    TitleRound.setup_database
+    RateNode.setup_database
   end
 
   it "passes all scenarios from CSV" do
@@ -81,7 +81,7 @@ RSpec.describe "CSV Scenario Testing" do
 
       # Calculate
       begin
-        result = TitleRound.calculate(params)
+        result = RateNode.calculate(params)
 
         # Extract actual values
         actual_owners = result.owners_policy ? (result.owners_policy[:premium_cents] / 100.0) : 0.0

@@ -5,7 +5,7 @@ require "date"
 
 # This script parses TX rates and endorsements to create seed data
 
-module TitleRound
+module RateNode
   module Seeds
     class ParseTXData
       # Parse TX endorsements CSV
@@ -166,7 +166,7 @@ end
 if __FILE__ == $0
   # Parse endorsements
   csv_path = File.expand_path("../../../tx_endorsements.csv", __FILE__)
-  endorsements = TitleRound::Seeds::ParseTXData.parse_endorsements(csv_path)
+  endorsements = RateNode::Seeds::ParseTXData.parse_endorsements(csv_path)
 
   puts "Parsed #{endorsements.length} endorsements"
   puts "\nSample endorsements:"
@@ -175,7 +175,7 @@ if __FILE__ == $0
   end
 
   # Generate rate tiers
-  tiers = TitleRound::Seeds::ParseTXData.generate_tx_rate_tiers
+  tiers = RateNode::Seeds::ParseTXData.generate_tx_rate_tiers
   puts "\nGenerated #{tiers[:detailed].length} detailed rate tiers"
   puts "\nSample detailed tiers:"
   tiers[:detailed].first(3).each do |t|

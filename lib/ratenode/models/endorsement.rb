@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Models
     class Endorsement
       PRICING_TYPES = %w[flat percentage percentage_basic tiered no_charge].freeze

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe TitleRound::Calculators::BaseRate do
+RSpec.describe RateNode::Calculators::BaseRate do
   describe "#rounded_liability" do
     it "returns same value when already on $10K boundary" do
       rate = described_class.new(50_000_000, state: "CA", underwriter: "TRG")

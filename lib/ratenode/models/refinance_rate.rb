@@ -2,7 +2,7 @@
 
 require "date"
 
-module TitleRound
+module RateNode
   module Models
     class RefinanceRate
       OVER_5M_BASE_CENTS = 720_000
