@@ -7,7 +7,7 @@ module RateNode
     class Rates
       CA_TRG_EFFECTIVE_DATE = Date.new(2024, 1, 1)
       NC_TRG_EFFECTIVE_DATE = Date.new(2025, 10, 1)
-      TX_DEFAULT_EFFECTIVE_DATE = Date.new(2025, 7, 1)
+      TX_DEFAULT_EFFECTIVE_DATE = Date.new(2019, 9, 1)
 
       def self.seed_all
         seed_ca_trg

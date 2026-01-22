@@ -56,12 +56,14 @@ module RateNode
       end
 
       def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
-        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS
-
-        # TX uses formula-based calculation for policies > $100,000
+        # TX uses its own formula-based calculation for policies > $100,000
+        # TX formulas cover all amounts up to $100M+ so don't use CA's $3M logic
         if state == "TX" && liability_cents > 10_000_000
           return calculate_tx_formula_rate(liability_cents)
         end
+
+        # CA-specific: use $3M+ calculation for large policies
+        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS && state != "TX"
 
         # Get all tiers to check if we should use tiered calculation
         tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type)
@@ -127,32 +129,33 @@ module RateNode
       end
 
       # TX formula-based calculation for policies > $100,000
-      # Based on TX Title Insurance Basic Premium Rates (Effective July 1, 2025)
+      # Based on TX Title Insurance Basic Premium Rates (Effective September 1, 2019)
+      # Commissioner's Order 2019-5980, Docket No. 2812
       # Per PDF instructions: Round at each step
       def self.calculate_tx_formula_rate(liability_cents)
         liability_dollars = liability_cents / 100.0
 
         # Determine which formula tier to use and calculate in dollars
         # Round the multiplication result, then add base
-        # Rates are per $1,000 of liability: $5.4775/thousand for $100k-$1M range
+        # Formula: (liability - subtract) * multiplier + base
         result_dollars = case liability_dollars
         when 0..100_000
           # Should not reach here, handled by lookup table
           0
         when 100_001..1_000_000
-          ((liability_dollars - 100_000) * 0.0054775).round + 749
+          ((liability_dollars - 100_000) * 0.00527).round + 832
         when 1_000_001..5_000_000
-          ((liability_dollars - 1_000_000) * 0.00390).round + 5_680
+          ((liability_dollars - 1_000_000) * 0.00433).round + 5_575
         when 5_000_001..15_000_000
-          ((liability_dollars - 5_000_000) * 0.00321).round + 21_280
+          ((liability_dollars - 5_000_000) * 0.00357).round + 22_895
         when 15_000_001..25_000_000
-          ((liability_dollars - 15_000_000) * 0.00229).round + 53_390
+          ((liability_dollars - 15_000_000) * 0.00254).round + 58_595
         when 25_000_001..50_000_000
-          ((liability_dollars - 25_000_000) * 0.00137).round + 76_280
+          ((liability_dollars - 25_000_000) * 0.00152).round + 83_995
         when 50_000_001..100_000_000
-          ((liability_dollars - 50_000_000) * 0.00124).round + 110_530
+          ((liability_dollars - 50_000_000) * 0.00138).round + 121_995
         else # > 100_000_000
-          ((liability_dollars - 100_000_000) * 0.00112).round + 172_530
+          ((liability_dollars - 100_000_000) * 0.00124).round + 190_995
         end
 
         # Convert to cents

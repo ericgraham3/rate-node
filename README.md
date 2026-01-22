@@ -1,16 +1,17 @@
 # RateNode
 
-## Known Issues 1/15/26
+## Known Issues 1/22/26
 - Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
-- External validation sources (title company websites, titlehound) calculate the T-19 basic rate using the 2019 rates, not the 2025 rates; domain question as to whether this is intentional or a flaw with titlehound and external title company calculators
 
-## Recent Updates (1/15/2026)
+## Recent Updates (1/22/2026)
 
 Today's changes:
-- **Added Texas (TX) promulgated rates** (effective July 1, 2025)
+- **Reverted Texas (TX) rates to 2019 promulgated rates** (effective September 1, 2019)
+  - The 2025 TX rates have not yet been implemented by the TX Dept. of Insurance due to ongoing litigation
+  - 2019 rates remain in effect as of January 2026
 - **TX Owner's Policy**: Formula-based calculation for policies over $100,000
-  - $100,001 - $1,000,000: $5.4775 per $1,000 + $749 base
-  - Higher tiers have progressively lower per-thousand rates
+  - $100,001 - $1,000,000: $5.27 per $1,000 + $832 base
+  - Higher tiers have progressively lower per-thousand rates (see Pricing Rules below)
 - **TX Simultaneous Issue Lender's Policy**: $100 flat fee (when loan ≤ owner liability)
 - **TX Endorsements**: 58 endorsements loaded from promulgated rate manual
   - Refactored endorsement system to use unique codes (e.g., "0885") instead of form numbers
@@ -240,15 +241,15 @@ NC uses a tiered calculation (like progressive tax brackets):
 | Standard | 100% of basic premium rate |
 | Homeowner's | 100% of basic premium rate |
 
-TX uses formula-based calculation for policies over $100,000:
+TX uses formula-based calculation for policies over $100,000 (2019 rates, effective September 1, 2019):
 - $25,000 to $100,000: Lookup table (flat rates per $500 increment)
-- $100,001 to $1,000,000: $5.4775 per $1,000 over $100,000 + $749
-- $1,000,001 to $5,000,000: $3.90 per $1,000 over $1,000,000 + $5,680
-- $5,000,001 to $15,000,000: $3.21 per $1,000 over $5,000,000 + $21,280
-- $15,000,001 to $25,000,000: $2.29 per $1,000 over $15,000,000 + $53,390
-- $25,000,001 to $50,000,000: $1.37 per $1,000 over $25,000,000 + $76,280
-- $50,000,001 to $100,000,000: $1.24 per $1,000 over $50,000,000 + $110,530
-- Over $100,000,000: $1.12 per $1,000 over $100,000,000 + $172,530
+- $100,001 to $1,000,000: $5.27 per $1,000 over $100,000 + $832
+- $1,000,001 to $5,000,000: $4.33 per $1,000 over $1,000,000 + $5,575
+- $5,000,001 to $15,000,000: $3.57 per $1,000 over $5,000,000 + $22,895
+- $15,000,001 to $25,000,000: $2.54 per $1,000 over $15,000,000 + $58,595
+- $25,000,001 to $50,000,000: $1.52 per $1,000 over $25,000,000 + $83,995
+- $50,000,001 to $100,000,000: $1.38 per $1,000 over $50,000,000 + $121,995
+- Over $100,000,000: $1.24 per $1,000 over $100,000,000 + $190,995
 
 **Note:** TX does not round liability amounts (uses exact values).
 
