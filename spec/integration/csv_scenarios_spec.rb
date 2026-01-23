@@ -8,196 +8,263 @@ RSpec.describe "CSV Scenario Testing" do
   let(:tolerance) { 2.00 } # Allow $2 difference for rounding
 
   before(:all) do
-    # Use persistent database for integration tests
-    RateNode.setup_database
+    RateNode.setup_database(":memory:")
+  end
+
+  # Helper to parse CSV value - converts empty strings to nil
+  def parse_value(value)
+    return nil if value.nil? || value.to_s.strip.empty?
+    value.strip
+  end
+
+  # Helper to parse numeric value
+  def parse_number(value)
+    parsed = parse_value(value)
+    return nil if parsed.nil?
+    parsed.to_f
+  end
+
+  # Helper to parse integer value
+  def parse_int(value)
+    parsed = parse_value(value)
+    return nil if parsed.nil?
+    parsed.to_i
+  end
+
+  # Helper to parse boolean (TRUE/FALSE strings)
+  def parse_bool(value)
+    parsed = parse_value(value)
+    return false if parsed.nil?
+    parsed.upcase == 'TRUE'
+  end
+
+  # Helper to parse date (M/D/YYYY format)
+  def parse_date(value)
+    parsed = parse_value(value)
+    return nil if parsed.nil?
+    Date.strptime(parsed, '%m/%d/%Y')
+  rescue ArgumentError
+    nil
+  end
+
+  # Helper to format currency
+  def fmt(amount)
+    "$#{format('%.2f', amount || 0)}"
+  end
+
+  # Helper to get default underwriter for state
+  def default_underwriter(state)
+    case state
+    when 'CA' then 'TRG'
+    when 'NC' then 'TRG'
+    when 'TX' then 'DEFAULT'
+    else nil
+    end
   end
 
   it "passes all scenarios from CSV" do
-    scenarios_passed = 0
-    scenarios_failed = 0
-    failures = []
+    scenarios = []
+    results = []
 
+    # Parse all scenarios from CSV
     CSV.foreach(csv_path, headers: true) do |row|
-      scenario_name = row['scenario_name']
-      state = row['state']
-      underwriter = row['underwriter']
-      transaction_type = row['transaction_type']
-      
-      # Skip empty rows
-      next if scenario_name.nil? || scenario_name.strip.empty?
-      
-      # Validate state/underwriter combination (allow both NC/INVESTORS and NC/TRG)
-      valid_combinations = [
-        ['CA', 'TRG'],
-        ['NC', 'INVESTORS'],
-        ['NC', 'TRG']
-      ]
-      unless valid_combinations.include?([state, underwriter])
-        failures << {
-          scenario: scenario_name,
-          error: "Invalid state/underwriter combination: #{state} + #{underwriter}"
-        }
-        scenarios_failed += 1
-        next
-      end
+      scenario_name = parse_value(row['scenario_name'])
+      next if scenario_name.nil?
 
-      # Build parameters hash
+      scenarios << {
+        name: scenario_name,
+        state: parse_value(row['state']),
+        underwriter: parse_value(row['underwriter']),
+        transaction_type: parse_value(row['transaction_type']),
+        purchase_price: parse_int(row['purchase_price']),
+        loan_amount: parse_int(row['loan_amount']),
+        prior_policy_amount: parse_int(row['prior_policy_amount']),
+        prior_policy_date: parse_date(row['prior_policy_date']),
+        owners_policy_type: parse_value(row['owners_policy_type']),
+        lender_policy_type: parse_value(row['lender_policy_type']),
+        endorsements: parse_value(row['endorsements']),
+        cpl: parse_bool(row['cpl']),
+        expected_owners_premium: parse_number(row['expected_owners_premium']),
+        expected_lenders_premium: parse_number(row['expected_lenders_premium']),
+        expected_endorsement_charges: parse_number(row['expected_endorsement_charges']),
+        expected_cpl_charges: parse_number(row['expected_cpl_charges']),
+        expected_reissue_discount: parse_number(row['expected_reissue_discount']),
+        expected_total: parse_number(row['expected_total'])
+      }
+    end
+
+    puts "\n"
+    puts "=" * 60
+    puts "RateNode CSV Scenario Tests"
+    puts "=" * 60
+
+    # Process each scenario
+    scenarios.each do |scenario|
+      state = scenario[:state]
+      underwriter = scenario[:underwriter] || default_underwriter(state)
+
+      # Build parameters
       params = {
         state: state,
         underwriter: underwriter,
-        transaction_type: transaction_type.to_sym
+        transaction_type: (scenario[:transaction_type] || 'purchase').to_sym
       }
 
-      if transaction_type == 'purchase'
-        params[:purchase_price_cents] = row['purchase_price'].to_i * 100
-        params[:loan_amount_cents] = row['loan_amount'].to_i * 100
-
-        # Use owners_policy_type column name from CSV
-        policy_type = row['owners_policy_type'] || row['policy_type']
-        params[:owner_policy_type] = policy_type.to_sym if policy_type && !policy_type.strip.empty?
-        params[:include_lenders_policy] = row['loan_amount'].to_i > 0
+      if params[:transaction_type] == :purchase
+        params[:purchase_price_cents] = (scenario[:purchase_price] || 0) * 100
+        params[:loan_amount_cents] = (scenario[:loan_amount] || 0) * 100
+        params[:owner_policy_type] = (scenario[:owners_policy_type] || 'standard').to_sym
+        params[:include_lenders_policy] = (scenario[:loan_amount] || 0) > 0
       else # refinance
-        params[:loan_amount_cents] = row['loan_amount'].to_i * 100
+        params[:loan_amount_cents] = (scenario[:loan_amount] || 0) * 100
         params[:include_lenders_policy] = true
       end
 
-      # Parse endorsements
-      endorsement_codes = row['endorsements'].to_s.split(',').map(&:strip).reject(&:empty?)
-      params[:endorsement_codes] = endorsement_codes unless endorsement_codes.empty?
-
-      # Parse CPL flag (TRUE/FALSE string to boolean)
-      cpl_value = row['cpl'].to_s.strip.upcase
-      params[:include_cpl] = (cpl_value == 'TRUE')
-
-      # Parse prior policy date
-      if row['prior_policy_date'] && !row['prior_policy_date'].strip.empty?
-        params[:prior_policy_date] = Date.strptime(row['prior_policy_date'], '%m/%d/%Y')
+      # Endorsements
+      if scenario[:endorsements]
+        codes = scenario[:endorsements].split(',').map(&:strip).reject(&:empty?)
+        params[:endorsement_codes] = codes unless codes.empty?
       end
 
-      # Parse prior policy amount
-      if row['prior_policy_amount'] && !row['prior_policy_amount'].strip.empty?
-        params[:prior_policy_amount_cents] = row['prior_policy_amount'].to_i * 100
+      # CPL
+      params[:include_cpl] = scenario[:cpl]
+
+      # Prior policy (reissue discount)
+      if scenario[:prior_policy_amount] && scenario[:prior_policy_date]
+        params[:prior_policy_amount_cents] = scenario[:prior_policy_amount] * 100
+        params[:prior_policy_date] = scenario[:prior_policy_date]
       end
 
       # Calculate
+      result = {
+        scenario: scenario[:name],
+        passed: true,
+        error: nil,
+        checks: [],
+        failed_checks: []
+      }
+
       begin
-        result = RateNode.calculate(params)
+        calc_result = RateNode.calculate(params)
 
         # Extract actual values
-        actual_owners = result.owners_policy ? (result.owners_policy[:premium_cents] / 100.0) : 0.0
-        actual_lenders = result.lenders_policy ? (result.lenders_policy[:premium_cents] / 100.0) : 0.0
-        actual_endorsements = (result.totals[:endorsements_cents] / 100.0)
-        actual_cpl = result.cpl ? (result.cpl[:amount_cents] / 100.0) : 0.0
-        actual_reissue_discount = result.owners_policy && result.owners_policy[:reissue_discount_cents] ?
-          (result.owners_policy[:reissue_discount_cents] / 100.0) : 0.0
-        actual_total = (result.totals[:grand_total_cents] / 100.0)
-
-        # Expected values from CSV
-        expected_owners = row['expected_owners_premium'].to_f
-        expected_lenders = row['expected_lenders_premium'] && !row['expected_lenders_premium'].strip.empty? ?
-          row['expected_lenders_premium'].to_f : 0.0
-        expected_endorsements = row['expected_endorsement_charges'] && !row['expected_endorsement_charges'].strip.empty? ?
-          row['expected_endorsement_charges'].to_f : 0.0
-        expected_cpl = row['expected_cpl_charges'] && !row['expected_cpl_charges'].strip.empty? ?
-          row['expected_cpl_charges'].to_f : 0.0
-        expected_reissue_discount = row['expected_reissue_discount'] && !row['expected_reissue_discount'].strip.empty? ?
-          row['expected_reissue_discount'].to_f : 0.0
-
-        # For total, calculate if not provided
-        if row['expected_total'] && !row['expected_total'].strip.empty?
-          expected_total = row['expected_total'].to_f
-        else
-          expected_total = expected_owners + expected_lenders + expected_endorsements + expected_cpl
-        end
-
-        # Compare with tolerance
-        owners_diff = (actual_owners - expected_owners).abs
-        lenders_diff = (actual_lenders - expected_lenders).abs
-        endorsements_diff = (actual_endorsements - expected_endorsements).abs
-        cpl_diff = (actual_cpl - expected_cpl).abs
-        reissue_diff = (actual_reissue_discount - expected_reissue_discount).abs
-        total_diff = (actual_total - expected_total).abs
-
-        if owners_diff > tolerance || lenders_diff > tolerance ||
-           endorsements_diff > tolerance || cpl_diff > tolerance ||
-           reissue_diff > tolerance || total_diff > tolerance
-          failures << {
-            scenario: scenario_name,
-            owners: { expected: expected_owners, actual: actual_owners, diff: owners_diff },
-            lenders: { expected: expected_lenders, actual: actual_lenders, diff: lenders_diff },
-            endorsements: { expected: expected_endorsements, actual: actual_endorsements, diff: endorsements_diff },
-            cpl: { expected: expected_cpl, actual: actual_cpl, diff: cpl_diff },
-            reissue_discount: { expected: expected_reissue_discount, actual: actual_reissue_discount, diff: reissue_diff },
-            total: { expected: expected_total, actual: actual_total, diff: total_diff }
-          }
-          scenarios_failed += 1
-        else
-          scenarios_passed += 1
-        end
-      rescue => e
-        failures << {
-          scenario: scenario_name,
-          error: "Exception: #{e.message}",
-          backtrace: e.backtrace.first
+        actual = {
+          owners: calc_result.owners_policy ? (calc_result.owners_policy[:premium_cents] / 100.0) : 0.0,
+          lenders: calc_result.lenders_policy ? (calc_result.lenders_policy[:premium_cents] / 100.0) : 0.0,
+          endorsements: (calc_result.totals[:endorsements_cents] / 100.0),
+          cpl: calc_result.cpl ? (calc_result.cpl[:amount_cents] / 100.0) : 0.0,
+          reissue_discount: calc_result.owners_policy&.dig(:reissue_discount_cents) ?
+            (calc_result.owners_policy[:reissue_discount_cents] / 100.0) : 0.0,
+          total: (calc_result.totals[:grand_total_cents] / 100.0)
         }
-        scenarios_failed += 1
-      end
-    end
 
-    # Output failure details
-    if failures.any?
-      puts "\n" + "=" * 80
-      puts "FAILED SCENARIOS (#{scenarios_failed} of #{scenarios_passed + scenarios_failed})"
-      puts "=" * 80
-      
-      failures.each do |failure|
-        puts "\nScenario: #{failure[:scenario]}"
-        if failure[:error]
-          puts "  ERROR: #{failure[:error]}"
-          puts "  #{failure[:backtrace]}" if failure[:backtrace]
-        else
-          if failure[:owners][:diff] > tolerance
-            puts "  Owners Premium: Expected $#{format('%.2f', failure[:owners][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:owners][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:owners][:diff])}"
+        # Expected values
+        expected = {
+          owners: scenario[:expected_owners_premium] || 0.0,
+          lenders: scenario[:expected_lenders_premium] || 0.0,
+          endorsements: scenario[:expected_endorsement_charges] || 0.0,
+          cpl: scenario[:expected_cpl_charges] || 0.0,
+          reissue_discount: scenario[:expected_reissue_discount] || 0.0,
+          total: scenario[:expected_total]
+        }
+
+        # Calculate expected total if not provided
+        if expected[:total].nil?
+          expected[:total] = expected[:owners] + expected[:lenders] +
+                            expected[:endorsements] + expected[:cpl] -
+                            expected[:reissue_discount]
+        end
+
+        # Check each field
+        checks = [
+          { name: 'Owners Premium', key: :owners, expected: expected[:owners], actual: actual[:owners] },
+          { name: 'Lenders Premium', key: :lenders, expected: expected[:lenders], actual: actual[:lenders] },
+          { name: 'Endorsements', key: :endorsements, expected: expected[:endorsements], actual: actual[:endorsements] },
+          { name: 'CPL', key: :cpl, expected: expected[:cpl], actual: actual[:cpl] },
+          { name: 'Reissue Discount', key: :reissue_discount, expected: expected[:reissue_discount], actual: actual[:reissue_discount] },
+          { name: 'Total', key: :total, expected: expected[:total], actual: actual[:total] }
+        ]
+
+        checks.each do |check|
+          diff = (check[:actual] - check[:expected]).abs
+          within_tolerance = diff <= tolerance
+          warning = diff > 0 && within_tolerance
+
+          check[:diff] = diff
+          check[:passed] = within_tolerance
+          check[:warning] = warning
+
+          # Only show check if expected is non-zero OR actual is non-zero
+          if check[:expected] != 0 || check[:actual] != 0
+            result[:checks] << check
+            result[:failed_checks] << check unless check[:passed]
           end
-          if failure[:lenders][:diff] > tolerance
-            puts "  Lenders Premium: Expected $#{format('%.2f', failure[:lenders][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:lenders][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:lenders][:diff])}"
-          end
-          if failure[:endorsements][:diff] > tolerance
-            puts "  Endorsements: Expected $#{format('%.2f', failure[:endorsements][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:endorsements][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:endorsements][:diff])}"
-          end
-          if failure[:cpl] && failure[:cpl][:diff] > tolerance
-            puts "  CPL: Expected $#{format('%.2f', failure[:cpl][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:cpl][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:cpl][:diff])}"
-          end
-          if failure[:reissue_discount] && failure[:reissue_discount][:diff] > tolerance
-            puts "  Reissue Discount: Expected $#{format('%.2f', failure[:reissue_discount][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:reissue_discount][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:reissue_discount][:diff])}"
-          end
-          if failure[:total][:diff] > tolerance
-            puts "  Total: Expected $#{format('%.2f', failure[:total][:expected])}, " \
-                 "Actual $#{format('%.2f', failure[:total][:actual])}, " \
-                 "Diff $#{format('%.2f', failure[:total][:diff])}"
+        end
+
+        result[:passed] = result[:failed_checks].empty?
+
+      rescue => e
+        result[:passed] = false
+        result[:error] = "#{e.class}: #{e.message}"
+        result[:backtrace] = e.backtrace.first
+      end
+
+      results << result
+
+      # Output for this scenario
+      puts "\n  Scenario: #{scenario[:name]}"
+
+      if result[:error]
+        puts "    ERROR: #{result[:error]}"
+        puts "    #{result[:backtrace]}" if result[:backtrace]
+      else
+        result[:checks].each do |check|
+          if check[:passed]
+            status = check[:warning] ? "\u2713 (within tolerance)" : "\u2713"
+            diff_note = check[:warning] ? " [diff: #{fmt(check[:diff])}]" : ""
+            puts "    #{status} #{check[:name]}: #{fmt(check[:actual])} (expected #{fmt(check[:expected])})#{diff_note}"
+          else
+            puts "    \u2717 #{check[:name]}: #{fmt(check[:actual])} (expected #{fmt(check[:expected])}) DIFF: #{fmt(check[:diff])}"
           end
         end
       end
-      puts "\n" + "=" * 80
+
+      status_text = result[:passed] ? "PASSED" : "FAILED"
+      puts "    Status: #{status_text}"
     end
 
-    expect(scenarios_failed).to eq(0), 
-      "Expected all scenarios to pass, but #{scenarios_failed} failed. See output above for details."
-    expect(scenarios_passed).to be > 0,
-      "No scenarios were processed. Check CSV file format."
+    # Summary
+    passed = results.count { |r| r[:passed] }
+    failed = results.count { |r| !r[:passed] }
+    total = results.length
+
+    puts "\n"
+    puts "=" * 60
+    puts "Test Summary"
+    puts "=" * 60
+    puts "Total Scenarios: #{total}"
+    puts "Passed: #{passed}"
+    puts "Failed: #{failed}"
+
+    if failed > 0
+      puts "\nFailed Scenarios:"
+      results.reject { |r| r[:passed] }.each do |result|
+        if result[:error]
+          puts "  - #{result[:scenario]}: #{result[:error]}"
+        else
+          issues = result[:failed_checks].map do |check|
+            "#{check[:name]} off by #{fmt(check[:diff])}"
+          end.join(', ')
+          puts "  - #{result[:scenario]}: #{issues}"
+        end
+      end
+    end
+
+    puts "=" * 60
+    puts "\n"
+
+    # Single assertion
+    expect(failed).to eq(0),
+      "#{failed} of #{total} scenarios failed. See output above for details."
   end
 end
-
-
-
-

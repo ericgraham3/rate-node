@@ -1,7 +1,19 @@
 scenario_name,state,underwriter,transaction_type,purchase_price,loan_amount,prior_policy_amount,prior_policy_date,owners_policy_type,lender_policy_type,endorsements,cpl,expected_owners_premium,expected_lenders_premium,expected_endorsement_charges,expected_cpl_charges,expected_reissue_discount,expected_total
-CA_Purchase_Loan,CA,TRG,purchase,500000,400000,,,homeowner,standard,"CLTA 103.5, CLTA 110.9",FALSE,1729,150,50,,,
-CA_Purchase_Cash,CA,TRG,purchase,400000,0,,,standard,standard,CLTA 103.5,FALSE,1372,,25,,,
-NC_Purchase_Loan_Reissue_TRG,NC,TRG,purchase,60000,58200,35000,1/1/2020,standard,standard,"ALTA 8.1, ALTA 9",TRUE,118.15,28.5,46,41.4,48.65,234.05
-NC_Purchase_Simple_TRG,NC,TRG,purchase,99999,79999,,,standard,standard,"ALTA 8.1, ALTA 9",TRUE,278,28.5,46,69,,
-NC_Purchase_Cash_Reissue_TRG,NC,TRG,purchase,100001,0,45000,1/1/2018,standard,standard,,FALSE,232.27,,,,67.43,232.27
-NC_Purchase_Cash_Simple_TRG,NC,TRG,purchase,150000,0,,,standard,standard,,FALSE,386.5,,,
+CA_Purchase_Loan,CA,TRG,purchase,500000,400000,,,homeowner,standard,"CLTA 103.5, CLTA 110.9",FALSE,1729,150,50,,,1929
+CA_Purchase_Cash,CA,TRG,purchase,400000,0,,,standard,standard,CLTA 103.5,FALSE,1372,,25,,,1397
+NC_Purchase_Loan_Reissue,NC,TRG,purchase,60000,58200,35000,1/1/2020,standard,standard,"ALTA 8.1, ALTA 9",TRUE,118.15,28.5,46,41.4,48.65,234.05
+NC_Purchase_Simple,NC,TRG,purchase,99999,79999,,,standard,standard,"ALTA 8.1, ALTA 9",TRUE,278,28.5,46,69,,421.5
+NC_Purchase_Cash_Reissue,NC,TRG,purchase,100001,0,45000,1/1/2018,standard,standard,,FALSE,232.27,,,,67.43,232.27
+NC_Purchase_Cash_Simple,NC,TRG,purchase,150000,0,,,standard,standard,,FALSE,386.5,,,,,386.5
+TX_Lookup_25k,TX,,purchase,25000,0,,,standard,,,FALSE,328,,,,,328
+TX_Lookup_50k,TX,,purchase,50000,0,,,standard,,,FALSE,496,,,,,496
+TX_Lookup_75k,TX,,purchase,75000,0,,,standard,,,FALSE,665,,,,,665
+TX_Lookup_100k,TX,,purchase,100000,0,,,standard,,,FALSE,832,,,,,832
+TX_Formula_268k,TX,,purchase,268500,0,,,standard,,,FALSE,1720,,,,,1720
+TX_Formula_4826k,TX,,purchase,4826600,0,,,standard,,,FALSE,22144,,,,,22144
+TX_Formula_10902k,TX,,purchase,10902800,0,,,standard,,,FALSE,43968,,,,,43968
+TX_Formula_17295k,TX,,purchase,17295100,0,,,standard,,,FALSE,64425,,,,,64425
+TX_Formula_39351k,TX,,purchase,39351800,0,,,standard,,,FALSE,105810,,,,,105810
+TX_Formula_75300k,TX,,purchase,75300200,0,,,standard,,,FALSE,156909,,,,,156909
+TX_Formula_151250k,TX,,purchase,151250300,0,,,standard,,,FALSE,254545,,,,,254545
+TX_Purchase_With_Loan,TX,,purchase,500000,400000,,,standard,standard,,FALSE,2940,100,,,0,3040
