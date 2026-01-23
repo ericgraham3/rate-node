@@ -1,5 +1,22 @@
 # RateNode
 
+## Recent Updates (1/23/2026)
+
+- **Consolidated test suite**: Single CSV-driven integration test file
+- **Simplified spec directory structure**:
+  ```
+  spec/
+  ├── spec_helper.rb              # Simplified RSpec config
+  ├── integration/
+  │   └── csv_scenarios_spec.rb   # Single test file for all scenarios
+  └── fixtures/
+      └── scenarios_input.csv     # Test data (18 scenarios: CA, NC, TX)
+  ```
+- **Enhanced test output**: Checkmarks (✓/✗), tolerance warnings (±$2.00), summary section
+- **18 test scenarios passing**: 2 CA, 4 NC, 12 TX (including all 7 TX formula tier validations)
+
+---
+
 ## Known Issues 1/22/26
 - Endorsement rates need to be calculated off of correct policy type (e.g., a T-19 endorsement charge for the loan title policy is 5% of the basic premium rate for the loan policy) but they're currently calculating based off the owners rate
 
@@ -33,7 +50,7 @@ Today's changes:
   - NC Simultaneous issue: $28.50 flat (vs $150 in CA)
   - NC Reissue discount: 50% on prior policy amount within 15 years
   - NC CPL tiered rates: $0.69/$0.13/$0.00 per thousand
-- **All 6 CSV integration test scenarios now passing**
+- **All CSV integration test scenarios passing**
 
 ---
 
@@ -336,3 +353,26 @@ Use `Endorsement.find_by_form_code("T-19.1", ...)` to find all variants of a for
 ```bash
 bundle exec rspec
 ```
+
+### Test Structure
+
+All tests are driven by a single CSV file (`spec/fixtures/scenarios_input.csv`) containing expected values for each scenario. The test runner:
+
+1. Parses each row from the CSV
+2. Calls `RateNode.calculate()` with the scenario parameters
+3. Compares actual vs expected values with ±$2.00 tolerance
+4. Outputs formatted results with pass/fail status
+
+### Adding New Test Scenarios
+
+Add a row to `spec/fixtures/scenarios_input.csv` with columns:
+- `scenario_name` - Unique identifier
+- `state` - CA, NC, or TX
+- `underwriter` - TRG, DEFAULT, etc. (optional, uses state default)
+- `transaction_type` - purchase or refinance
+- `purchase_price`, `loan_amount` - In dollars
+- `prior_policy_amount`, `prior_policy_date` - For reissue discount
+- `owners_policy_type`, `lender_policy_type` - standard, homeowner, extended
+- `endorsements` - Comma-separated codes
+- `cpl` - TRUE/FALSE
+- `expected_*` - Expected values for validation
