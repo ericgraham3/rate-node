@@ -16,6 +16,10 @@ module RateNode
         @as_of_date = as_of_date
       end
 
+      def state_rules
+        @state_rules ||= RateNode.rules_for(state)
+      end
+
       def calculate
         Models::RateTier.calculate_rate(rounded_liability, state: state, underwriter: underwriter, as_of_date: as_of_date)
       end
@@ -25,8 +29,8 @@ module RateNode
       end
 
       def rounded_liability
-        # TX does not round liabilities (uses exact amounts)
-        return @liability_cents if state == "TX"
+        # Some states (e.g., TX) do not round liabilities
+        return @liability_cents unless state_rules[:rounds_liability]
 
         return @liability_cents if (@liability_cents % TEN_THOUSAND_CENTS).zero?
 

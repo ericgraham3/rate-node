@@ -18,6 +18,10 @@ module RateNode
         @prior_policy_amount_cents = prior_policy_amount_cents
       end
 
+      def state_rules
+        @state_rules ||= RateNode.rules_for(state)
+      end
+
       def calculate
         base_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
         multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
@@ -34,12 +38,11 @@ module RateNode
       def calculate_reissue_discount(full_premium)
         return 0 unless eligible_for_reissue_discount?
 
-        # NC: 50% discount on portion up to prior policy amount
         discount_percent = case state
                           when "NC"
-                            0.50
+                            state_rules[:reissue_discount_percent]
                           else
-                            0.0
+                            state_rules[:reissue_discount_percent]
                           end
 
         # Calculate the portion of current liability covered by prior policy
@@ -61,13 +64,16 @@ module RateNode
       def eligible_for_reissue_discount?
         return false unless prior_policy_date && prior_policy_amount_cents
 
+        eligibility_years = state_rules[:reissue_eligibility_years]
+        return false unless eligibility_years
+
         years_since_prior = ((as_of_date - prior_policy_date) / 365.25).floor
 
         case state
         when "NC"
-          years_since_prior <= 15
+          years_since_prior <= eligibility_years
         else
-          false
+          years_since_prior <= eligibility_years
         end
       end
 

@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gem "sqlite3", "~> 1.6"
 gem "thor", "~> 1.3"
+gem "csv"
 
 group :development, :test do
   gem "rspec", "~> 3.12"

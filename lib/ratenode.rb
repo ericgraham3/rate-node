@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "ratenode/state_rules"
 require_relative "ratenode/database"
 require_relative "ratenode/models/rate_tier"
 require_relative "ratenode/models/refinance_rate"
