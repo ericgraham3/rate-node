@@ -1,5 +1,34 @@
 # RateNode
 
+## Recent Updates (1/28/2026)
+
+**State-Based Refactoring:**
+
+- **Centralized state rules** in `lib/ratenode/state_rules.rb`:
+  - All state-specific constants (concurrent fees, CPL settings, reissue discounts, liability rounding) now in one place
+  - Replaced hardcoded constants in `lenders_policy.rb`, `cpl_calculator.rb`, `owners_policy.rb`, `base_rate.rb`
+  - Easy to add new states by copying a STATE_RULES entry
+
+- **Reorganized seed data** by state:
+  ```
+  db/seeds/
+  ├── rates.rb              # Simplified loader (~140 lines)
+  └── data/
+      ├── ca_rates.rb       # CA rate tiers, endorsements, refinance rates
+      ├── nc_rates.rb       # NC rate tiers, endorsements, CPL, refinance rates
+      └── tx_rates.rb       # TX rate tiers, endorsements (converted from CSV)
+  ```
+
+- **TX endorsements converted** from CSV to Ruby hashes (no runtime CSV parsing)
+- **Archived old TX files** to `docs/archived/`
+
+**To add a new state:**
+1. Add entry to `STATE_RULES` in `lib/ratenode/state_rules.rb`
+2. Create `db/seeds/data/{state}_rates.rb` with rate tiers, endorsements, etc.
+3. Add `seed_{state}()` method in `db/seeds/rates.rb`
+
+---
+
 ## Recent Updates (1/23/2026)
 
 - **Consolidated test suite**: Single CSV-driven integration test file
@@ -60,6 +89,34 @@ Multi-state title insurance premium calculator supporting multiple states and un
 
 ```bash
 bundle install
+```
+
+## Project Structure
+
+```
+lib/ratenode/
+├── state_rules.rb              # Centralized state-specific constants
+├── calculator.rb               # Main calculation orchestrator
+├── calculators/
+│   ├── base_rate.rb            # Base rate lookup/calculation
+│   ├── owners_policy.rb        # Owner's policy with reissue discount
+│   ├── lenders_policy.rb       # Lender's policy (concurrent/standalone)
+│   ├── cpl_calculator.rb       # Closing Protection Letter
+│   ├── endorsement_calculator.rb
+│   └── refinance.rb
+└── models/
+    ├── rate_tier.rb            # Rate tier lookup and tiered calculation
+    ├── endorsement.rb          # Endorsement pricing
+    ├── policy_type.rb          # Policy type multipliers
+    ├── cpl_rate.rb             # CPL rate tiers
+    └── refinance_rate.rb
+
+db/seeds/
+├── rates.rb                    # Seed loader (calls state-specific seeders)
+└── data/
+    ├── ca_rates.rb             # California: TRG rates (effective 2024-01-01)
+    ├── nc_rates.rb             # North Carolina: TRG/Chicago Title (effective 2025-10-01)
+    └── tx_rates.rb             # Texas: Promulgated rates (effective 2019-09-01)
 ```
 
 ## CLI Usage

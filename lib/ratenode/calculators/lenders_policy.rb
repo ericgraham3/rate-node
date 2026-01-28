@@ -5,13 +5,6 @@ require "date"
 module RateNode
   module Calculators
     class LendersPolicy
-      # CA concurrent fee: $150
-      CA_CONCURRENT_BASE_FEE_CENTS = 15_000
-      # NC concurrent fee: $28.50
-      NC_CONCURRENT_BASE_FEE_CENTS = 2_850
-      # TX concurrent fee: $100 (simultaneous issue lender's policy)
-      TX_CONCURRENT_BASE_FEE_CENTS = 10_000
-
       attr_reader :loan_amount_cents, :owner_liability_cents, :concurrent, :state, :underwriter, :as_of_date
 
       def initialize(loan_amount_cents:, owner_liability_cents: nil, concurrent: false, state:, underwriter:, as_of_date: Date.today)
@@ -21,6 +14,10 @@ module RateNode
         @state = state
         @underwriter = underwriter
         @as_of_date = as_of_date
+      end
+
+      def state_rules
+        @state_rules ||= RateNode.rules_for(state)
       end
 
       def calculate
@@ -44,36 +41,38 @@ module RateNode
       end
 
       def calculate_concurrent
+        concurrent_fee = state_rules[:concurrent_base_fee_cents]
+
         case state
         when "NC"
-          # NC: Always $28.50 flat fee when concurrent, regardless of loan vs owner amount
-          NC_CONCURRENT_BASE_FEE_CENTS
+          # NC: Always flat fee when concurrent, regardless of loan vs owner amount
+          concurrent_fee
         when "TX"
-          # TX: $100 flat fee for simultaneous issue when loan <= owner
-          return TX_CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
-          calculate_increased_liability_tx
+          # TX: Flat fee for simultaneous issue when loan <= owner
+          return concurrent_fee if loan_amount_cents <= owner_liability_cents
+          calculate_increased_liability
         when "CA"
-          # CA: $150 if loan <= owner, or $150 + ELC if loan > owner
-          return CA_CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
+          # CA: Flat fee if loan <= owner, or flat fee + ELC if loan > owner
+          return concurrent_fee if loan_amount_cents <= owner_liability_cents
           calculate_increased_liability
         else
           # Default to CA logic for unknown states
-          return CA_CONCURRENT_BASE_FEE_CENTS if loan_amount_cents <= owner_liability_cents
+          return concurrent_fee if loan_amount_cents <= owner_liability_cents
           calculate_increased_liability
         end
       end
 
       def calculate_increased_liability
+        concurrent_fee = state_rules[:concurrent_base_fee_cents]
         excess = loan_amount_cents - owner_liability_cents
-        elc_rate = BaseRate.new(excess, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate_elc
-        CA_CONCURRENT_BASE_FEE_CENTS + elc_rate
-      end
 
-      def calculate_increased_liability_tx
-        # TX: $100 base + premium for excess loan amount over owner liability
-        excess = loan_amount_cents - owner_liability_cents
-        excess_rate = BaseRate.new(excess, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
-        TX_CONCURRENT_BASE_FEE_CENTS + excess_rate
+        excess_rate = if state_rules[:concurrent_uses_elc]
+                        BaseRate.new(excess, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate_elc
+                      else
+                        BaseRate.new(excess, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
+                      end
+
+        concurrent_fee + excess_rate
       end
     end
   end
