@@ -140,7 +140,8 @@ module RateNode
           { name: "underwriter_code", type: "VARCHAR(50) NOT NULL DEFAULT 'TRG'", default_value: "TRG" },
           { name: "effective_date", type: "DATE NOT NULL DEFAULT '2024-01-01'", default_value: "2024-01-01" },
           { name: "expires_date", type: "DATE", default_value: nil },
-          { name: "rate_type", type: "VARCHAR(20) DEFAULT 'premium'", default_value: "premium" }
+          { name: "rate_type", type: "VARCHAR(20) DEFAULT 'premium'", default_value: "premium" },
+          { name: "rate_table_type", type: "VARCHAR(20) DEFAULT 'original'", default_value: "original" }
         ],
         "refinance_rates" => [
           { name: "state_code", type: "VARCHAR(2) NOT NULL DEFAULT 'CA'", default_value: "CA" },
@@ -153,7 +154,9 @@ module RateNode
           { name: "underwriter_code", type: "VARCHAR(50) NOT NULL DEFAULT 'TRG'", default_value: "TRG" },
           { name: "effective_date", type: "DATE NOT NULL DEFAULT '2024-01-01'", default_value: "2024-01-01" },
           { name: "expires_date", type: "DATE", default_value: nil },
-          { name: "form_code", type: "VARCHAR(20)", default_value: nil }
+          { name: "form_code", type: "VARCHAR(20)", default_value: nil },
+          { name: "residential_amount_cents", type: "INTEGER", default_value: nil },
+          { name: "commercial_amount_cents", type: "INTEGER", default_value: nil }
         ],
         "policy_types" => [
           { name: "state_code", type: "VARCHAR(2) NOT NULL DEFAULT 'CA'", default_value: "CA" },
@@ -210,7 +213,7 @@ module RateNode
       # Create all indexes
       indexes = [
         "CREATE INDEX IF NOT EXISTS idx_rate_tiers_liability ON rate_tiers(min_liability_cents, max_liability_cents)",
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_tiers_unique ON rate_tiers(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date, rate_type)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_tiers_unique ON rate_tiers(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date, rate_type, rate_table_type)",
         "CREATE INDEX IF NOT EXISTS idx_rate_tiers_jurisdiction ON rate_tiers(state_code, underwriter_code, effective_date)",
         "CREATE INDEX IF NOT EXISTS idx_refinance_rates_liability ON refinance_rates(min_liability_cents, max_liability_cents)",
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_refinance_rates_unique ON refinance_rates(min_liability_cents, max_liability_cents, state_code, underwriter_code, effective_date)",

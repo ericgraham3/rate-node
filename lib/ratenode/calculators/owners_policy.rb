@@ -23,16 +23,52 @@ module RateNode
       end
 
       def calculate
+        # FL uses separate reissue rate table instead of discount percentage
+        if state_rules[:has_reissue_rate_table] && eligible_for_reissue_rates?
+          calculate_with_reissue_rate_table
+        else
+          calculate_standard
+        end
+      end
+
+      def calculate_standard
         base_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
         multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
         full_premium = (base_rate * multiplier).round
 
-        # Apply reissue discount if applicable
+        # Apply reissue discount if applicable (NC style)
         if eligible_for_reissue_discount?
           full_premium - calculate_reissue_discount(full_premium)
         else
           full_premium
         end
+      end
+
+      def calculate_with_reissue_rate_table
+        # FL: Use reissue rates for amount up to prior policy, original rates for excess
+        multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
+
+        if liability_cents <= prior_policy_amount_cents
+          # All at reissue rate
+          reissue_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "reissue").calculate
+          (reissue_rate * multiplier).round
+        else
+          # Reissue rate for prior amount, original rate for excess
+          reissue_rate = BaseRate.new(prior_policy_amount_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "reissue").calculate
+          excess_cents = liability_cents - prior_policy_amount_cents
+          excess_rate = BaseRate.new(excess_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "original").calculate
+          ((reissue_rate + excess_rate) * multiplier).round
+        end
+      end
+
+      def eligible_for_reissue_rates?
+        return false unless prior_policy_date && prior_policy_amount_cents
+
+        eligibility_years = state_rules[:reissue_eligibility_years]
+        return false unless eligibility_years
+
+        years_since_prior = ((as_of_date - prior_policy_date) / 365.25).floor
+        years_since_prior <= eligibility_years
       end
 
       def calculate_reissue_discount(full_premium)

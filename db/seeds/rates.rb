@@ -4,6 +4,7 @@ require "date"
 require_relative "data/ca_rates"
 require_relative "data/nc_rates"
 require_relative "data/tx_rates"
+require_relative "data/fl_rates"
 
 module RateNode
   module Seeds
@@ -12,6 +13,7 @@ module RateNode
         seed_ca
         seed_nc
         seed_tx
+        seed_fl
       end
 
       # California - TRG
@@ -48,7 +50,64 @@ module RateNode
         # TX has no refinance rates or CPL
       end
 
+      # Florida - TRG
+      def self.seed_fl
+        state = FL
+
+        # FL uses separate original and reissue rate tables
+        seed_fl_rate_tiers(state)
+        seed_refinance_rates(state)
+        seed_policy_types(state)
+        seed_endorsements(state)
+        # FL has no CPL
+      end
+
       private
+
+      # FL-specific: seed both original and reissue rate tables
+      def self.seed_fl_rate_tiers(state)
+        # Original rate table
+        original_data = state::RATE_TIERS_ORIGINAL.map do |row|
+          {
+            min: row[:min],
+            max: row[:max],
+            base: row[:base],
+            per_thousand: row[:per_thousand],
+            elc: row[:elc] || 0
+          }
+        end
+
+        Models::RateTier.seed(
+          original_data,
+          state_code: state::STATE_CODE,
+          underwriter_code: state::UNDERWRITER_CODE,
+          effective_date: state::EFFECTIVE_DATE,
+          expires_date: nil,
+          rate_type: "premium",
+          rate_table: "original"
+        )
+
+        # Reissue rate table
+        reissue_data = state::RATE_TIERS_REISSUE.map do |row|
+          {
+            min: row[:min],
+            max: row[:max],
+            base: row[:base],
+            per_thousand: row[:per_thousand],
+            elc: row[:elc] || 0
+          }
+        end
+
+        Models::RateTier.seed(
+          reissue_data,
+          state_code: state::STATE_CODE,
+          underwriter_code: state::UNDERWRITER_CODE,
+          effective_date: state::EFFECTIVE_DATE,
+          expires_date: nil,
+          rate_type: "premium",
+          rate_table: "reissue"
+        )
+      end
 
       def self.seed_rate_tiers(state, rate_type: nil)
         # Detect if data is already in cents (TX format) vs dollars (CA/NC format)

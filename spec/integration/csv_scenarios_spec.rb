@@ -58,6 +58,7 @@ RSpec.describe "CSV Scenario Testing" do
     when 'CA' then 'TRG'
     when 'NC' then 'TRG'
     when 'TX' then 'DEFAULT'
+    when 'FL' then 'TRG'
     else nil
     end
   end
@@ -84,6 +85,7 @@ RSpec.describe "CSV Scenario Testing" do
         lender_policy_type: parse_value(row['lender_policy_type']),
         endorsements: parse_value(row['endorsements']),
         cpl: parse_bool(row['cpl']),
+        property_type: parse_value(row['property_type']),
         expected_owners_premium: parse_number(row['expected_owners_premium']),
         expected_lenders_premium: parse_number(row['expected_lenders_premium']),
         expected_endorsement_charges: parse_number(row['expected_endorsement_charges']),
@@ -134,6 +136,9 @@ RSpec.describe "CSV Scenario Testing" do
         params[:prior_policy_amount_cents] = scenario[:prior_policy_amount] * 100
         params[:prior_policy_date] = scenario[:prior_policy_date]
       end
+
+      # Property type (for FL endorsements)
+      params[:property_type] = scenario[:property_type] if scenario[:property_type]
 
       # Calculate
       result = {

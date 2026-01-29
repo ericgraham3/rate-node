@@ -51,8 +51,8 @@ module RateNode
           # TX: Flat fee for simultaneous issue when loan <= owner
           return concurrent_fee if loan_amount_cents <= owner_liability_cents
           calculate_increased_liability
-        when "CA"
-          # CA: Flat fee if loan <= owner, or flat fee + ELC if loan > owner
+        when "CA", "FL"
+          # CA/FL: Flat fee if loan <= owner, or flat fee + ELC if loan > owner
           return concurrent_fee if loan_amount_cents <= owner_liability_cents
           calculate_increased_liability
         else

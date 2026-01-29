@@ -16,6 +16,7 @@ module RateNode
     option :no_lenders_policy, type: :boolean, default: false, desc: "Exclude lender's policy"
     option :endorsements, type: :string, desc: "Comma-separated endorsement codes"
     option :address, type: :string, desc: "Property address"
+    option :property_type, type: :string, desc: "Property type: residential or commercial (FL only)"
     option :json, type: :boolean, default: false, desc: "Output as JSON"
 
     def calculate
@@ -32,7 +33,8 @@ module RateNode
         endorsement_codes: parse_endorsements(options[:endorsements]),
         state: options[:state],
         underwriter: options[:underwriter],
-        as_of_date: parse_date(options[:as_of_date])
+        as_of_date: parse_date(options[:as_of_date]),
+        property_type: options[:property_type]
       ).calculate
 
       if options[:json]
