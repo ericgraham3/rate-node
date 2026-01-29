@@ -7,7 +7,8 @@ module RateNode
     attr_reader :transaction_type, :property_address, :purchase_price_cents,
                 :loan_amount_cents, :owner_policy_type, :include_lenders_policy,
                 :endorsement_codes, :state, :underwriter, :as_of_date,
-                :include_cpl, :prior_policy_date, :prior_policy_amount_cents
+                :include_cpl, :prior_policy_date, :prior_policy_amount_cents,
+                :property_type
 
     def initialize(params)
       @transaction_type = params[:transaction_type]&.to_sym || :purchase
@@ -23,6 +24,7 @@ module RateNode
       @include_cpl = params.fetch(:include_cpl, false)
       @prior_policy_date = params[:prior_policy_date]
       @prior_policy_amount_cents = params[:prior_policy_amount_cents]&.to_i
+      @property_type = params[:property_type]&.to_sym
     end
 
     def calculate
@@ -41,7 +43,10 @@ module RateNode
     def calculate_purchase
       owners = calculate_owners_policy
       lenders = include_lenders_policy ? calculate_lenders_policy(owners[:liability_cents]) : nil
-      endorsements = calculate_endorsements(lenders.nil? ? false : true)
+
+      # For FL percentage_combined endorsements, we need the combined premium
+      combined_premium_cents = [owners[:premium_cents], lenders&.dig(:premium_cents)].compact.sum
+      endorsements = calculate_endorsements(lenders.nil? ? false : true, combined_premium_cents: combined_premium_cents)
       cpl = include_cpl ? calculate_cpl(owners[:liability_cents]) : nil
 
       build_result(owners, lenders, endorsements, cpl)
@@ -104,7 +109,7 @@ module RateNode
       }
     end
 
-    def calculate_endorsements(concurrent)
+    def calculate_endorsements(concurrent, combined_premium_cents: nil)
       return [] if endorsement_codes.empty?
 
       liability = transaction_type == :refinance ? loan_amount_cents : purchase_price_cents
@@ -114,7 +119,9 @@ module RateNode
         concurrent: concurrent,
         state: state,
         underwriter: underwriter,
-        as_of_date: as_of_date
+        as_of_date: as_of_date,
+        combined_premium_cents: combined_premium_cents,
+        property_type: property_type
       )
       calc.calculate
     end

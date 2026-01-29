@@ -5,12 +5,13 @@ require "date"
 module RateNode
   module Models
     class Endorsement
-      PRICING_TYPES = %w[flat percentage percentage_basic tiered no_charge].freeze
+      PRICING_TYPES = %w[flat percentage percentage_basic percentage_combined property_tiered tiered no_charge].freeze
 
       attr_reader :id, :code, :form_code, :name, :pricing_type, :base_amount_cents,
                   :percentage, :min_cents, :max_cents, :concurrent_discount_pct,
                   :owner_only, :lender_only, :notes,
-                  :state_code, :underwriter_code, :effective_date, :expires_date
+                  :state_code, :underwriter_code, :effective_date, :expires_date,
+                  :residential_amount_cents, :commercial_amount_cents
 
       def initialize(attrs)
         @id = attrs["id"]
@@ -30,6 +31,8 @@ module RateNode
         @underwriter_code = attrs["underwriter_code"]
         @effective_date = attrs["effective_date"]
         @expires_date = attrs["expires_date"]
+        @residential_amount_cents = attrs["residential_amount_cents"]
+        @commercial_amount_cents = attrs["commercial_amount_cents"]
       end
 
       def self.find_by_code(code, state:, underwriter:, as_of_date: Date.today)
@@ -77,7 +80,7 @@ module RateNode
         rows.map { |row| new(row) }
       end
 
-      def calculate_premium(liability_cents, concurrent: false, state: nil, underwriter: nil, as_of_date: Date.today)
+      def calculate_premium(liability_cents, concurrent: false, state: nil, underwriter: nil, as_of_date: Date.today, combined_premium_cents: nil, property_type: nil)
         base = case pricing_type
                when "flat"
                  base_amount_cents || 0
@@ -85,6 +88,10 @@ module RateNode
                  calculate_percentage_premium(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
                when "percentage_basic"
                  calculate_percentage_basic_premium(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
+               when "percentage_combined"
+                 calculate_percentage_combined_premium(combined_premium_cents)
+               when "property_tiered"
+                 calculate_property_tiered_premium(property_type)
                when "tiered"
                  base_amount_cents || 0
                when "no_charge"
@@ -102,8 +109,8 @@ module RateNode
         expires_date_str = expires_date.is_a?(Date) ? expires_date.to_s : expires_date
         data.each do |row|
           db.execute(
-            "INSERT OR IGNORE INTO endorsements (code, form_code, name, pricing_type, base_amount_cents, percentage, min_cents, max_cents, concurrent_discount_pct, owner_only, lender_only, notes, state_code, underwriter_code, effective_date, expires_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [row[:code], row[:form_code], row[:name], row[:pricing_type], row[:base_amount], row[:percentage], row[:min], row[:max], row[:concurrent_discount], row[:owner_only] ? 1 : 0, row[:lender_only] ? 1 : 0, row[:notes], state_code, underwriter_code, effective_date_str, expires_date_str]
+            "INSERT OR IGNORE INTO endorsements (code, form_code, name, pricing_type, base_amount_cents, percentage, min_cents, max_cents, concurrent_discount_pct, owner_only, lender_only, notes, state_code, underwriter_code, effective_date, expires_date, residential_amount_cents, commercial_amount_cents) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [row[:code], row[:form_code], row[:name], row[:pricing_type], row[:base_amount], row[:percentage], row[:min], row[:max], row[:concurrent_discount], row[:owner_only] ? 1 : 0, row[:lender_only] ? 1 : 0, row[:notes], state_code, underwriter_code, effective_date_str, expires_date_str, row[:residential_amount], row[:commercial_amount]]
           )
         end
       end
@@ -129,6 +136,29 @@ module RateNode
         premium = [premium, min_cents].max if min_cents
         premium = [premium, max_cents].min if max_cents
         premium
+      end
+
+      # FL: Percentage applied to combined owner's + lender's premium
+      def calculate_percentage_combined_premium(combined_premium_cents)
+        return 0 unless percentage && combined_premium_cents
+
+        premium = (combined_premium_cents * percentage).ceil
+        premium = [premium, min_cents].max if min_cents
+        premium = [premium, max_cents].min if max_cents
+        premium
+      end
+
+      # FL: Different flat rates for residential vs commercial
+      def calculate_property_tiered_premium(property_type)
+        case property_type&.to_sym
+        when :residential
+          residential_amount_cents || base_amount_cents || 0
+        when :commercial
+          commercial_amount_cents || base_amount_cents || 0
+        else
+          # Default to residential if not specified
+          residential_amount_cents || base_amount_cents || 0
+        end
       end
 
       def apply_concurrent_discount(amount, concurrent)

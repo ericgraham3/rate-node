@@ -11,7 +11,7 @@ module RateNode
 
       attr_reader :id, :min_liability_cents, :max_liability_cents,
                   :base_rate_cents, :per_thousand_cents, :extended_lender_concurrent_cents,
-                  :state_code, :underwriter_code, :effective_date, :expires_date, :rate_type
+                  :state_code, :underwriter_code, :effective_date, :expires_date, :rate_type, :rate_table_type
 
       def initialize(attrs)
         @id = attrs["id"]
@@ -25,22 +25,23 @@ module RateNode
         @effective_date = attrs["effective_date"]
         @expires_date = attrs["expires_date"]
         @rate_type = attrs["rate_type"] || "premium"
+        @rate_table_type = attrs["rate_table_type"] || "original"
       end
 
-      def self.find_by_liability(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
+      def self.find_by_liability(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium", rate_table: "original")
         as_of_date_str = as_of_date.is_a?(Date) ? as_of_date.to_s : as_of_date
         row = Database.instance.get_first_row(
-          "SELECT * FROM rate_tiers WHERE min_liability_cents <= ? AND (max_liability_cents IS NULL OR max_liability_cents >= ?) AND state_code = ? AND underwriter_code = ? AND rate_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents DESC LIMIT 1",
-          [liability_cents, liability_cents, state, underwriter, rate_type, as_of_date_str, as_of_date_str]
+          "SELECT * FROM rate_tiers WHERE min_liability_cents <= ? AND (max_liability_cents IS NULL OR max_liability_cents >= ?) AND state_code = ? AND underwriter_code = ? AND rate_type = ? AND rate_table_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents DESC LIMIT 1",
+          [liability_cents, liability_cents, state, underwriter, rate_type, rate_table, as_of_date_str, as_of_date_str]
         )
         row ? new(row) : nil
       end
 
-      def self.all_tiers(state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
+      def self.all_tiers(state:, underwriter:, as_of_date: Date.today, rate_type: "premium", rate_table: "original")
         as_of_date_str = as_of_date.is_a?(Date) ? as_of_date.to_s : as_of_date
         rows = Database.instance.execute(
-          "SELECT * FROM rate_tiers WHERE state_code = ? AND underwriter_code = ? AND rate_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents ASC",
-          [state, underwriter, rate_type, as_of_date_str, as_of_date_str]
+          "SELECT * FROM rate_tiers WHERE state_code = ? AND underwriter_code = ? AND rate_type = ? AND rate_table_type = ? AND effective_date <= ? AND (expires_date IS NULL OR expires_date > ?) ORDER BY min_liability_cents ASC",
+          [state, underwriter, rate_type, rate_table, as_of_date_str, as_of_date_str]
         )
         rows.map { |row| new(row) }
       end
@@ -55,7 +56,7 @@ module RateNode
         calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "premium")
       end
 
-      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium")
+      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium", rate_table: "original")
         # TX uses its own formula-based calculation for policies > $100,000
         # TX formulas cover all amounts up to $100M+ so don't use CA's $3M logic
         if state == "TX" && liability_cents > 10_000_000
@@ -63,19 +64,19 @@ module RateNode
         end
 
         # CA-specific: use $3M+ calculation for large policies
-        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS && state != "TX"
+        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS && state != "TX" && state != "FL"
 
         # Get all tiers to check if we should use tiered calculation
-        tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type)
+        tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type, rate_table: rate_table)
         return 0 if tiers.empty?
 
-        # Check if this uses tiered per-thousand calculation (NC style)
+        # Check if this uses tiered per-thousand calculation (NC/FL style)
         if tiers.first.per_thousand_cents && tiers.first.per_thousand_cents > 0
           # Tiered calculation: sum across all applicable brackets
           calculate_tiered_rate(liability_cents, tiers)
         else
           # Single-tier calculation (CA/TX style)
-          tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type)
+          tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type, rate_table: rate_table)
           return 0 unless tier
           tier.base_rate_cents
         end
@@ -162,14 +163,14 @@ module RateNode
         result_dollars * 100
       end
 
-      def self.seed(data, state_code:, underwriter_code:, effective_date:, expires_date: nil, rate_type: "premium")
+      def self.seed(data, state_code:, underwriter_code:, effective_date:, expires_date: nil, rate_type: "premium", rate_table: "original")
         db = Database.instance
         effective_date_str = effective_date.is_a?(Date) ? effective_date.to_s : effective_date
         expires_date_str = expires_date.is_a?(Date) ? expires_date.to_s : expires_date
         data.each do |row|
           db.execute(
-            "INSERT OR IGNORE INTO rate_tiers (min_liability_cents, max_liability_cents, base_rate_cents, per_thousand_cents, extended_lender_concurrent_cents, state_code, underwriter_code, effective_date, expires_date, rate_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [row[:min], row[:max], row[:base], row[:per_thousand], row[:elc], state_code, underwriter_code, effective_date_str, expires_date_str, rate_type]
+            "INSERT OR IGNORE INTO rate_tiers (min_liability_cents, max_liability_cents, base_rate_cents, per_thousand_cents, extended_lender_concurrent_cents, state_code, underwriter_code, effective_date, expires_date, rate_type, rate_table_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [row[:min], row[:max], row[:base], row[:per_thousand], row[:elc], state_code, underwriter_code, effective_date_str, expires_date_str, rate_type, rate_table]
           )
         end
       end
