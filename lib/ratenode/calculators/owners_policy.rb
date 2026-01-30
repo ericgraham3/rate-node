@@ -46,6 +46,8 @@ module RateNode
 
       def calculate_with_reissue_rate_table
         # FL: Use reissue rates for amount up to prior policy, original rates for excess
+        # Per FL manual: "Any amount of new insurance in excess of the amount under the
+        # previous policy must be computed at the original rates"
         multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
 
         if liability_cents <= prior_policy_amount_cents
@@ -53,10 +55,16 @@ module RateNode
           reissue_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "reissue").calculate
           (reissue_rate * multiplier).round
         else
-          # Reissue rate for prior amount, original rate for excess
+          # Reissue rate for prior amount
           reissue_rate = BaseRate.new(prior_policy_amount_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "reissue").calculate
-          excess_cents = liability_cents - prior_policy_amount_cents
-          excess_rate = BaseRate.new(excess_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "original").calculate
+
+          # Excess must use original rates at the CUMULATIVE tier position
+          # Calculate as: (original rate for full liability) - (original rate for prior amount)
+          # This gives us the incremental cost from prior to current at original rates
+          original_rate_full = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "original").calculate
+          original_rate_prior = BaseRate.new(prior_policy_amount_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "original").calculate
+          excess_rate = original_rate_full - original_rate_prior
+
           ((reissue_rate + excess_rate) * multiplier).round
         end
       end
@@ -114,13 +122,26 @@ module RateNode
       end
 
       def reissue_discount_amount
-        return 0 unless eligible_for_reissue_discount?
+        # FL uses rate table approach: discount = original_premium - reissue_premium
+        if state_rules[:has_reissue_rate_table] && eligible_for_reissue_rates?
+          original_premium = calculate_original_premium
+          reissue_premium = calculate_with_reissue_rate_table
+          original_premium - reissue_premium
+        elsif eligible_for_reissue_discount?
+          # NC-style percentage discount
+          base_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
+          multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
+          full_premium = (base_rate * multiplier).round
+          calculate_reissue_discount(full_premium)
+        else
+          0
+        end
+      end
 
-        base_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date).calculate
+      def calculate_original_premium
+        base_rate = BaseRate.new(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_table: "original").calculate
         multiplier = Models::PolicyType.multiplier_for(policy_type, state: state, underwriter: underwriter, as_of_date: as_of_date)
-        full_premium = (base_rate * multiplier).round
-
-        calculate_reissue_discount(full_premium)
+        (base_rate * multiplier).round
       end
 
       def policy_type_label

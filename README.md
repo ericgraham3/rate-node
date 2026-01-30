@@ -11,12 +11,26 @@
     - Before: $147.00 (5% of owner's basic rate $2,940)
     - After: $120.65 (5% of lender's basic rate $2,413)
 
-- **Files modified:**
-  - `lib/ratenode/calculator.rb` - Pass `lender_liability_cents` to endorsement calculator
-  - `lib/ratenode/calculators/endorsement_calculator.rb` - Accept and forward lender liability
-  - `lib/ratenode/models/endorsement.rb` - Use lender liability for `lender_only` endorsements
+**FL Reissue Rate and Endorsement Bugfixes:**
 
-- **All 12 TX test scenarios now pass**
+- **Fixed FL reissue rate table** (`db/seeds/data/fl_rates.rb`):
+  - Corrected $0-$100k reissue rate: $3.30/thousand (was incorrectly $3.50)
+  - Corrected tier structure to match FL promulgated rates
+
+- **Fixed FL reissue premium calculation** (`lib/ratenode/calculators/owners_policy.rb`):
+  - Excess liability now uses correct cumulative tier position
+  - Excess = (original rate for full liability) - (original rate for prior amount)
+  - Previously calculated excess in isolation, hitting wrong rate tier
+
+- **Fixed FL reissue discount tracking**:
+  - For rate-table states (FL), discount = original_premium - reissue_premium
+  - Previously returned $0 because it relied on percentage discount (0% for FL)
+
+- **Fixed ALTA 9 endorsement percentage** (`db/seeds/data/fl_rates.rb`):
+  - Corrected to 10% of combined premium (was incorrectly 5%)
+  - Per FL rate manual: "Min. 10% of underlying policy premium"
+
+- **All 32 test scenarios now pass** (12 TX, 4 FL, 16 AZ)
 
 ---
 
@@ -53,18 +67,6 @@
 - **AZ Endorsements**: ALTA 5.1, 8.1, 9 at $100 flat each
 
 - **16 new AZ test scenarios** added (32 total scenarios now)
-
-**Known Issues (FL):**
-
-The following pre-existing FL test failures are unrelated to the AZ implementation:
-
-| State | Scenario | Issue |
-|-------|----------|-------|
-| FL | FL_Purchase_Simple | Owner's premium mismatch ($1,075 vs expected $1,100) |
-| FL | FL_Purchase_Reissue | Owner's premium mismatch ($787.50 vs expected $730) |
-| FL | FL_Endorsement_Combined | Endorsement charges mismatch ($67.50 vs expected $135) |
-
-These issues require separate investigation.
 
 ---
 
@@ -133,7 +135,7 @@ These issues require separate investigation.
       └── scenarios_input.csv     # Test data (18 scenarios: CA, NC, TX)
   ```
 - **Enhanced test output**: Checkmarks (✓/✗), tolerance warnings (±$2.00), summary section
-- **32 test scenarios**: 12 TX, 4 FL, 16 AZ (29 passing, 3 pre-existing FL failures)
+- **32 test scenarios**: 12 TX, 4 FL, 16 AZ (all passing)
 
 ---
 

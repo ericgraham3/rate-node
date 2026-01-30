@@ -28,18 +28,16 @@ module RateNode
       ].freeze
 
       # Reissue Rate Table - Lower rates for prior policy holders (values in cents)
-      # Per FL promulgated reissue rates
+      # Per FL promulgated reissue rates (fl_rate_summary.md Section 2)
       RATE_TIERS_REISSUE = [
-        # $0 - $100,000: $3.50 per thousand (reissue)
-        { min: 0, max: 10_000_000, base: 0, per_thousand: 350 },
+        # $0 - $100,000: $3.30 per thousand (reissue)
+        { min: 0, max: 10_000_000, base: 0, per_thousand: 330 },
         # $100,001 - $1,000,000: $3.00 per thousand (reissue)
         { min: 10_000_001, max: 100_000_000, base: 0, per_thousand: 300 },
-        # $1,000,001 - $5,000,000: $1.75 per thousand (reissue)
-        { min: 100_000_001, max: 500_000_000, base: 0, per_thousand: 175 },
-        # $5,000,001 - $10,000,000: $1.50 per thousand (reissue)
-        { min: 500_000_001, max: 1_000_000_000, base: 0, per_thousand: 150 },
-        # Over $10,000,000: $1.25 per thousand (reissue)
-        { min: 1_000_000_001, max: nil, base: 0, per_thousand: 125 }
+        # $1,000,001 - $10,000,000: $2.00 per thousand (reissue)
+        { min: 100_000_001, max: 1_000_000_000, base: 0, per_thousand: 200 },
+        # Over $10,000,000: $1.50 per thousand (reissue)
+        { min: 1_000_000_001, max: nil, base: 0, per_thousand: 150 }
       ].freeze
 
       # Refinance rates - FL uses flat rates based on loan amount
@@ -66,8 +64,8 @@ module RateNode
         { code: "ALTA 8.1", form_code: "ALTA 8.1", name: "Environmental Protection Lien", pricing_type: "flat", base_amount: 2500 },
 
         # Percentage on combined premium (FL-specific)
-        # Survey endorsement: 5% of combined owner's + lender's premium
-        { code: "ALTA 9", form_code: "ALTA 9", name: "Restrictions, Encroachments, Minerals", pricing_type: "percentage_combined", percentage: 0.05, min: 2500 },
+        # ALTA 9: 10% of combined owner's + lender's premium
+        { code: "ALTA 9", form_code: "ALTA 9", name: "Restrictions, Encroachments, Minerals", pricing_type: "percentage_combined", percentage: 0.10, min: 2500 },
         { code: "ALTA 9.3", form_code: "ALTA 9.3", name: "Covenants, Conditions and Restrictions - Loan Policy", pricing_type: "no_charge", lender_only: true },
 
         # Location endorsement: 10% of combined premium
