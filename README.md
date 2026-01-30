@@ -1,5 +1,25 @@
 # RateNode
 
+## Recent Updates (1/30/2026)
+
+**TX Endorsement Bugfix:**
+
+- **Fixed `lender_only` endorsement calculations** for `percentage_basic` pricing type:
+  - Previously, all endorsements used the owner's liability (purchase price) to calculate the basic rate
+  - Now, `lender_only` endorsements correctly use the lender's liability (loan amount)
+  - Example: Endorsement 0885 (T-19 Restrictions - Lender) on a $500k purchase / $400k loan:
+    - Before: $147.00 (5% of owner's basic rate $2,940)
+    - After: $120.65 (5% of lender's basic rate $2,413)
+
+- **Files modified:**
+  - `lib/ratenode/calculator.rb` - Pass `lender_liability_cents` to endorsement calculator
+  - `lib/ratenode/calculators/endorsement_calculator.rb` - Accept and forward lender liability
+  - `lib/ratenode/models/endorsement.rb` - Use lender liability for `lender_only` endorsements
+
+- **All 12 TX test scenarios now pass**
+
+---
+
 ## Recent Updates (1/29/2026)
 
 **Arizona (AZ) Implementation:**
@@ -34,18 +54,17 @@
 
 - **16 new AZ test scenarios** added (32 total scenarios now)
 
-**Known Issues (TX and FL):**
+**Known Issues (FL):**
 
-The following pre-existing test failures are unrelated to the AZ implementation:
+The following pre-existing FL test failures are unrelated to the AZ implementation:
 
 | State | Scenario | Issue |
 |-------|----------|-------|
-| TX | TX_Purchase_With_Loan | Endorsement charges returning $0 (expected $170.65) |
 | FL | FL_Purchase_Simple | Owner's premium mismatch ($1,075 vs expected $1,100) |
 | FL | FL_Purchase_Reissue | Owner's premium mismatch ($787.50 vs expected $730) |
 | FL | FL_Endorsement_Combined | Endorsement charges mismatch ($67.50 vs expected $135) |
 
-These issues existed prior to the AZ implementation and require separate investigation.
+These issues require separate investigation.
 
 ---
 
@@ -114,7 +133,7 @@ These issues existed prior to the AZ implementation and require separate investi
       └── scenarios_input.csv     # Test data (18 scenarios: CA, NC, TX)
   ```
 - **Enhanced test output**: Checkmarks (✓/✗), tolerance warnings (±$2.00), summary section
-- **32 test scenarios**: 12 TX, 6 FL, 16 AZ (28 passing, 4 pre-existing FL/TX failures)
+- **32 test scenarios**: 12 TX, 4 FL, 16 AZ (29 passing, 3 pre-existing FL failures)
 
 ---
 

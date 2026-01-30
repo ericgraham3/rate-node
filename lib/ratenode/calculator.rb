@@ -146,6 +146,7 @@ module RateNode
       calc = Calculators::EndorsementCalculator.new(
         endorsement_codes: endorsement_codes,
         liability_cents: liability,
+        lender_liability_cents: loan_amount_cents,
         concurrent: concurrent,
         state: state,
         underwriter: underwriter,

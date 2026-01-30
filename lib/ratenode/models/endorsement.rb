@@ -80,14 +80,14 @@ module RateNode
         rows.map { |row| new(row) }
       end
 
-      def calculate_premium(liability_cents, concurrent: false, state: nil, underwriter: nil, as_of_date: Date.today, combined_premium_cents: nil, property_type: nil)
+      def calculate_premium(liability_cents, lender_liability_cents: nil, concurrent: false, state: nil, underwriter: nil, as_of_date: Date.today, combined_premium_cents: nil, property_type: nil)
         base = case pricing_type
                when "flat"
                  base_amount_cents || 0
                when "percentage"
                  calculate_percentage_premium(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
                when "percentage_basic"
-                 calculate_percentage_basic_premium(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
+                 calculate_percentage_basic_premium(liability_cents, lender_liability_cents: lender_liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
                when "percentage_combined"
                  calculate_percentage_combined_premium(combined_premium_cents)
                when "property_tiered"
@@ -127,11 +127,14 @@ module RateNode
         premium
       end
 
-      def calculate_percentage_basic_premium(liability_cents, state:, underwriter:, as_of_date: Date.today)
+      def calculate_percentage_basic_premium(liability_cents, lender_liability_cents: nil, state:, underwriter:, as_of_date: Date.today)
         return 0 unless percentage
 
+        # Use lender liability for lender_only endorsements, owner liability otherwise
+        effective_liability = lender_only && lender_liability_cents ? lender_liability_cents : liability_cents
+
         # Use basic rate for TX endorsements
-        basic_rate = RateTier.calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "basic")
+        basic_rate = RateTier.calculate_rate(effective_liability, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "basic")
         premium = (basic_rate * percentage).ceil
         premium = [premium, min_cents].max if min_cents
         premium = [premium, max_cents].min if max_cents
