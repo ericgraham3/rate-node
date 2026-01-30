@@ -10,11 +10,11 @@ TX_Formula_17295k,TX,,purchase,17295100,0,,,standard,,,,FALSE,,64425,,,,,64425
 TX_Formula_39351k,TX,,purchase,39351800,0,,,standard,,,,FALSE,,105810,,,,,105810
 TX_Formula_75300k,TX,,purchase,75300200,0,,,standard,,,,FALSE,,156909,,,,,156909
 TX_Formula_151250k,TX,,purchase,151250300,0,,,standard,,,,FALSE,,254545,,,,,254545
-TX_Purchase_With_Loan,TX,,purchase,500000,400000,,,standard,standard,"0710,0700,0501,0885,0810",,FALSE,,2940,100,317.65,,0,3357.65
-FL_Purchase_Simple,FL,,purchase,200000,0,,,standard,,,,FALSE,,1100,,,,,1075
-FL_Purchase_With_Loan,FL,,purchase,300000,240000,,,standard,standard,,,FALSE,,1575,25,,,0,1600
-FL_Purchase_Reissue,FL,,purchase,200000,0,150000,1/1/2024,standard,,,,FALSE,,730,,,,0,788
-FL_Endorsement_Combined,FL,,purchase,250000,200000,,,standard,standard,ALTA 9,,FALSE,,1325,25,135,,,1418
+TX_Purchase_With_Loan,TX,,purchase,500000,400000,,,standard,standard,"0710,0700,0501,0885,0810",,FALSE,,2940,100,317.65,,,3357.65
+FL_Purchase_Simple,FL,,purchase,200000,0,,,standard,,,,FALSE,,1075,,,,,1075
+FL_Purchase_With_Loan,FL,,purchase,300000,240000,,,standard,standard,,,FALSE,,1575,25,,,,1600
+FL_Purchase_Reissue,FL,,purchase,200000,0,150000,1/1/2024,standard,,,,FALSE,,730,,,,345,730
+FL_Endorsement_Combined,FL,,purchase,250000,200000,,,standard,standard,ALTA 9,,FALSE,,1325,25,135,,,1485
 AZ_Maricopa_Owners,AZ,TRG,purchase,500000,,,,standard,,,,,,1859,,,,,1859
 AZ_Maricopa_With_Loan,AZ,TRG,purchase,480000,450000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,1811,100,300,25,,2236
 AZ_Maricopa_Homeowners_Owners,AZ,TRG,purchase,500000,,,,homeowners,,,,,,2045,,,,,2045
