@@ -41,8 +41,18 @@ module RateNode
       end
 
       def self.multiplier_for(type, state:, underwriter:, as_of_date: Date.today)
+        # Database lookup first (allows overrides)
         policy = find_by_name(type, state: state, underwriter: underwriter, as_of_date: as_of_date)
-        policy&.multiplier || TYPES.dig(type.to_sym, :multiplier) || 1.0
+        return policy.multiplier if policy
+
+        # Then STATE_RULES config
+        rules = RateNode.rules_for(state, underwriter: underwriter)
+        if rules[:policy_type_multipliers]
+          return rules[:policy_type_multipliers][type.to_sym] || 1.0
+        end
+
+        # Legacy fallback
+        TYPES.dig(type.to_sym, :multiplier) || 1.0
       end
 
       def self.seed(state_code:, underwriter_code:, effective_date:, expires_date: nil, types: nil)

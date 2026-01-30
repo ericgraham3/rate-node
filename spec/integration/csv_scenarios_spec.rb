@@ -59,7 +59,23 @@ RSpec.describe "CSV Scenario Testing" do
     when 'NC' then 'TRG'
     when 'TX' then 'DEFAULT'
     when 'FL' then 'TRG'
+    when 'AZ' then nil  # AZ requires explicit underwriter in CSV
     else nil
+    end
+  end
+
+  # Helper to extract county from AZ scenario names
+  def county_from_scenario_name(name, state)
+    return nil unless state == "AZ"
+
+    if name.include?("Maricopa")
+      "Maricopa"
+    elsif name.include?("Pima")
+      "Pima"
+    elsif name.include?("Coconino")
+      "Coconino"
+    else
+      nil
     end
   end
 
@@ -84,6 +100,7 @@ RSpec.describe "CSV Scenario Testing" do
         owners_policy_type: parse_value(row['owners_policy_type']),
         lender_policy_type: parse_value(row['lender_policy_type']),
         endorsements: parse_value(row['endorsements']),
+        is_hold_open: parse_bool(row['is_hold_open']),
         cpl: parse_bool(row['cpl']),
         property_type: parse_value(row['property_type']),
         expected_owners_premium: parse_number(row['expected_owners_premium']),
@@ -139,6 +156,17 @@ RSpec.describe "CSV Scenario Testing" do
 
       # Property type (for FL endorsements)
       params[:property_type] = scenario[:property_type] if scenario[:property_type]
+
+      # AZ-specific: county and hold-open
+      if state == "AZ"
+        params[:county] = county_from_scenario_name(scenario[:name], state)
+        params[:is_hold_open] = scenario[:is_hold_open]
+
+        # For hold-open final (has prior_policy_amount but no prior_policy_date)
+        if scenario[:prior_policy_amount] && !scenario[:prior_policy_date]
+          params[:prior_policy_amount_cents] = scenario[:prior_policy_amount] * 100
+        end
+      end
 
       # Calculate
       result = {
