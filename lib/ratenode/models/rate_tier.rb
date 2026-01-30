@@ -56,11 +56,16 @@ module RateNode
         calculate_rate(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: "premium")
       end
 
-      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium", rate_table: "original")
+      def self.calculate_rate(liability_cents, state:, underwriter:, as_of_date: Date.today, rate_type: "premium", rate_table: "original", county: nil)
         # TX uses its own formula-based calculation for policies > $100,000
         # TX formulas cover all amounts up to $100M+ so don't use CA's $3M logic
         if state == "TX" && liability_cents > 10_000_000
           return calculate_tx_formula_rate(liability_cents)
+        end
+
+        # AZ uses region/area-specific rate tables
+        if state == "AZ"
+          return calculate_az_rate(liability_cents, underwriter: underwriter, as_of_date: as_of_date, county: county)
         end
 
         # CA-specific: use $3M+ calculation for large policies
@@ -127,6 +132,52 @@ module RateNode
         excess = liability_cents - THREE_MILLION_CENTS
         increments = (excess / 1_000_000.0).ceil
         75 + (increments * 75)
+      end
+
+      # AZ-specific rate calculation
+      # TRG: Region-based rates with per-$5k increments
+      # ORT: Area-based fixed brackets with per-$20k above $1M
+      def self.calculate_az_rate(liability_cents, underwriter:, as_of_date: Date.today, county: nil)
+        rules = RateNode.rules_for("AZ", underwriter: underwriter)
+
+        # Determine rate table based on underwriter and county
+        rate_table = if underwriter == "TRG"
+          region = determine_az_region(county, rules)
+          "original_region_#{region}"
+        else
+          "original"
+        end
+
+        tiers = all_tiers(state: "AZ", underwriter: underwriter, as_of_date: as_of_date, rate_type: "premium", rate_table: rate_table)
+        return 0 if tiers.empty?
+
+        # Find the applicable tier
+        tier = tiers.select { |t| t.min_liability_cents <= liability_cents && (t.max_liability_cents.nil? || t.max_liability_cents >= liability_cents) }
+                   .max_by { |t| t.min_liability_cents }
+
+        return 0 unless tier
+
+        # If per_thousand is set, calculate incremental rate
+        if tier.per_thousand_cents && tier.per_thousand_cents > 0
+          # Calculate base + per-thousand for amount above tier minimum
+          excess_cents = liability_cents - tier.min_liability_cents
+          excess_dollars = excess_cents / 100.0
+          increment_charge = (excess_dollars / 1000.0 * tier.per_thousand_cents).round
+          tier.base_rate_cents + increment_charge
+        else
+          tier.base_rate_cents
+        end
+      end
+
+      def self.determine_az_region(county, rules)
+        return 1 unless county && rules[:regions]
+
+        rules[:regions].each do |region_num, region_config|
+          return region_num if region_config[:counties].include?(county)
+        end
+
+        # Default to region 1 if county not found
+        1
       end
 
       # TX formula-based calculation for policies > $100,000

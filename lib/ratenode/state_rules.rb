@@ -4,91 +4,225 @@ module RateNode
   # Centralized state-specific constants for easy addition of new states.
   # To add a new state, copy an existing state block and adjust values.
   #
-  # Keys:
-  #   concurrent_base_fee_cents    - Flat fee for concurrent lender's policy
-  #   concurrent_uses_elc          - true: use ELC rate for excess, false: use full base rate
-  #   cpl_flat_fee_cents           - Flat CPL fee (nil = use tiered rates from database)
-  #   has_cpl                      - Whether state has CPL at all
-  #   reissue_discount_percent     - Discount percentage for reissue (0.0 = no discount)
-  #   reissue_eligibility_years    - Years prior policy valid for reissue (nil = not eligible)
-  #   rounds_liability             - Whether to round liability
-  #   rounding_increment_cents     - Amount to round to (default 1_000_000 = $10,000)
-  #   has_reissue_rate_table       - Whether state has separate reissue rate table (FL)
-  #   supports_property_type       - Whether endorsement pricing varies by property type
-  #   minimum_premium_cents        - Minimum premium for any policy
+  # Structure:
+  #   State-level keys (shared across underwriters):
+  #     has_cpl                      - Whether state has CPL at all
+  #     cpl_flat_fee_cents           - Flat CPL fee (nil = use tiered rates from database)
+  #     supports_property_type       - Whether endorsement pricing varies by property type
+  #
+  #   Underwriter-level keys (nested under underwriters: { "CODE" => { ... } }):
+  #     concurrent_base_fee_cents    - Flat fee for concurrent lender's policy
+  #     concurrent_uses_elc          - true: use ELC rate for excess, false: use full base rate
+  #     reissue_discount_percent     - Discount percentage for reissue (0.0 = no discount)
+  #     reissue_eligibility_years    - Years prior policy valid for reissue (nil = not eligible)
+  #     rounds_liability             - Whether to round liability
+  #     rounding_increment_cents     - Amount to round to (default 1_000_000 = $10,000)
+  #     has_reissue_rate_table       - Whether state has separate reissue rate table (FL)
+  #     minimum_premium_cents        - Minimum premium for any policy
+  #     policy_type_multipliers      - Multipliers for policy types (standard, homeowner, extended)
   #
   STATE_RULES = {
     "CA" => {
-      concurrent_base_fee_cents: 15_000,        # $150
-      concurrent_uses_elc: true,
-      cpl_flat_fee_cents: 0,
+      # State-level (shared)
       has_cpl: true,
-      reissue_discount_percent: 0.0,
-      reissue_eligibility_years: nil,
-      rounds_liability: true,
-      rounding_increment_cents: 1_000_000,      # $10,000
-      has_reissue_rate_table: false,
+      cpl_flat_fee_cents: 0,
       supports_property_type: false,
-      minimum_premium_cents: 0,
+
+      # Underwriters
+      underwriters: {
+        "DEFAULT" => {
+          concurrent_base_fee_cents: 15_000,        # $150
+          concurrent_uses_elc: true,
+          reissue_discount_percent: 0.0,
+          reissue_eligibility_years: nil,
+          rounds_liability: true,
+          rounding_increment_cents: 1_000_000,      # $10,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowner: 1.10,
+            extended: 1.25
+          }
+        }
+      }
     },
     "NC" => {
-      concurrent_base_fee_cents: 2_850,         # $28.50
-      concurrent_uses_elc: true,
-      cpl_flat_fee_cents: nil,                  # Uses tiered rates
+      # State-level (shared)
       has_cpl: true,
-      reissue_discount_percent: 0.50,           # 50%
-      reissue_eligibility_years: 15,
-      rounds_liability: true,
-      rounding_increment_cents: 1_000_000,      # $10,000
-      has_reissue_rate_table: false,
+      cpl_flat_fee_cents: nil,                      # Uses tiered rates
       supports_property_type: false,
-      minimum_premium_cents: 0,
+
+      # Underwriters
+      underwriters: {
+        "DEFAULT" => {
+          concurrent_base_fee_cents: 2_850,         # $28.50
+          concurrent_uses_elc: true,
+          reissue_discount_percent: 0.50,           # 50%
+          reissue_eligibility_years: 15,
+          rounds_liability: true,
+          rounding_increment_cents: 1_000_000,      # $10,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowner: 1.20,
+            extended: 1.20
+          }
+        }
+      }
     },
     "TX" => {
-      concurrent_base_fee_cents: 10_000,        # $100
-      concurrent_uses_elc: false,               # TX uses full base rate for excess
-      cpl_flat_fee_cents: nil,
+      # State-level (shared)
       has_cpl: false,
-      reissue_discount_percent: 0.0,
-      reissue_eligibility_years: nil,
-      rounds_liability: false,                  # TX uses exact amounts
-      rounding_increment_cents: nil,
-      has_reissue_rate_table: false,
+      cpl_flat_fee_cents: nil,
       supports_property_type: false,
-      minimum_premium_cents: 0,
+
+      # Underwriters
+      underwriters: {
+        "DEFAULT" => {
+          concurrent_base_fee_cents: 10_000,        # $100
+          concurrent_uses_elc: false,               # TX uses full base rate for excess
+          reissue_discount_percent: 0.0,
+          reissue_eligibility_years: nil,
+          rounds_liability: false,                  # TX uses exact amounts
+          rounding_increment_cents: nil,
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowner: 1.10,
+            extended: 1.25
+          }
+        }
+      }
     },
     "FL" => {
-      concurrent_base_fee_cents: 2_500,         # $25 minimum
-      concurrent_uses_elc: true,
-      cpl_flat_fee_cents: nil,
+      # State-level (shared)
       has_cpl: false,
-      reissue_discount_percent: 0.0,            # FL uses separate rate table instead
-      reissue_eligibility_years: 3,             # 3 years for reissue rate table
-      rounds_liability: true,
-      rounding_increment_cents: 10_000,         # $100 (FL rounds to nearest $100)
-      has_reissue_rate_table: true,             # FL has separate reissue rate table
-      supports_property_type: true,             # 1-4 family vs commercial affects endorsements
-      minimum_premium_cents: 10_000,            # $100 minimum premium
+      cpl_flat_fee_cents: nil,
+      supports_property_type: true,                 # 1-4 family vs commercial affects endorsements
+
+      # Underwriters
+      underwriters: {
+        "DEFAULT" => {
+          concurrent_base_fee_cents: 2_500,         # $25 minimum
+          concurrent_uses_elc: true,
+          reissue_discount_percent: 0.0,            # FL uses separate rate table instead
+          reissue_eligibility_years: 3,             # 3 years for reissue rate table
+          rounds_liability: true,
+          rounding_increment_cents: 10_000,         # $100 (FL rounds to nearest $100)
+          has_reissue_rate_table: true,             # FL has separate reissue rate table
+          minimum_premium_cents: 10_000,            # $100 minimum premium
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowner: 1.10,
+            extended: 1.25
+          }
+        }
+      }
+    },
+    "AZ" => {
+      # State-level (shared)
+      has_cpl: true,
+      cpl_flat_fee_cents: 2_500,                    # $25 flat
+      supports_property_type: false,
+
+      # Underwriters
+      underwriters: {
+        "TRG" => {
+          concurrent_base_fee_cents: 10_000,        # $100 flat
+          concurrent_uses_elc: false,
+          rounds_liability: true,
+          rounding_increment_cents: 500_000,        # $5,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          supports_hold_open: true,
+          hold_open_fee_percent: 0.25,
+          hold_open_minimum_cents: 25_000,          # $250
+          hold_open_eligibility_years: 2,
+          hold_open_final_per_thousand_cents: 241,  # $2.41/thousand for incremental amount
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowners: 1.10,
+            extended: 1.50
+          },
+          regions: {
+            1 => {
+              counties: %w[Apache Cochise Coconino Gila Graham Greenlee Maricopa Navajo Pinal Santa\ Cruz Yavapai Yuma],
+              minimum_premium_cents: 73_000
+            },
+            2 => {
+              counties: %w[La\ Paz Mohave Pima],
+              minimum_premium_cents: 60_000
+            }
+          }
+        },
+        "ORT" => {
+          concurrent_base_fee_cents: 10_000,        # $100
+          concurrent_uses_elc: false,
+          rounds_liability: true,
+          rounding_increment_cents: 2_000_000,      # $20,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          supports_hold_open: false,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowners: 1.10,
+            extended: 1.50
+          },
+          areas: {
+            1 => {
+              counties: %w[Coconino Maricopa Pima Pinal Yavapai],
+              minimum_premium_cents: 83_000
+            }
+          }
+        }
+      }
     },
   }.freeze
 
   # Default rules for states not explicitly configured.
   # Falls back to CA-like behavior.
   DEFAULT_STATE_RULES = {
-    concurrent_base_fee_cents: 15_000,
-    concurrent_uses_elc: true,
-    cpl_flat_fee_cents: nil,
     has_cpl: true,
-    reissue_discount_percent: 0.0,
-    reissue_eligibility_years: nil,
-    rounds_liability: true,
-    rounding_increment_cents: 1_000_000,
-    has_reissue_rate_table: false,
+    cpl_flat_fee_cents: nil,
     supports_property_type: false,
-    minimum_premium_cents: 0,
+    underwriters: {
+      "DEFAULT" => {
+        concurrent_base_fee_cents: 15_000,
+        concurrent_uses_elc: true,
+        reissue_discount_percent: 0.0,
+        reissue_eligibility_years: nil,
+        rounds_liability: true,
+        rounding_increment_cents: 1_000_000,
+        has_reissue_rate_table: false,
+        minimum_premium_cents: 0,
+        policy_type_multipliers: {
+          standard: 1.00,
+          homeowner: 1.10,
+          extended: 1.25
+        }
+      }
+    }
   }.freeze
 
-  def self.rules_for(state)
-    STATE_RULES.fetch(state, DEFAULT_STATE_RULES)
+  def self.rules_for(state, underwriter: nil)
+    state_config = STATE_RULES.fetch(state, DEFAULT_STATE_RULES)
+
+    # Handle nested underwriter structure
+    return state_config unless state_config.key?(:underwriters)
+
+    effective_underwriter = underwriter || "DEFAULT"
+    underwriter_config = state_config.dig(:underwriters, effective_underwriter)
+
+    # Fall back to DEFAULT underwriter if specific one not found
+    underwriter_config ||= state_config.dig(:underwriters, "DEFAULT")
+
+    raise Error, "Unknown underwriter #{effective_underwriter} for #{state}" unless underwriter_config
+
+    # Merge state-level with underwriter-level (underwriter takes precedence)
+    state_level = state_config.reject { |k, _| k == :underwriters }
+    state_level.merge(underwriter_config)
   end
 end

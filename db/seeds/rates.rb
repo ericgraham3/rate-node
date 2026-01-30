@@ -5,6 +5,7 @@ require_relative "data/ca_rates"
 require_relative "data/nc_rates"
 require_relative "data/tx_rates"
 require_relative "data/fl_rates"
+require_relative "data/az_rates"
 
 module RateNode
   module Seeds
@@ -14,6 +15,7 @@ module RateNode
         seed_nc
         seed_tx
         seed_fl
+        seed_az
       end
 
       # California - TRG
@@ -197,6 +199,56 @@ module RateNode
           underwriter_code: state::UNDERWRITER_CODE,
           effective_date: state::EFFECTIVE_DATE,
           expires_date: nil
+        )
+      end
+
+      # Arizona - TRG and ORT underwriters
+      def self.seed_az
+        seed_az_trg
+        seed_az_ort
+      end
+
+      def self.seed_az_trg
+        state = AZ_TRG
+
+        # Seed TRG Region 1 rates (default)
+        seed_az_rate_tiers(state, state::RATE_TIERS_REGION_1, region: 1)
+        # Seed TRG Region 2 rates
+        seed_az_rate_tiers(state, state::RATE_TIERS_REGION_2, region: 2)
+
+        seed_endorsements(state)
+      end
+
+      def self.seed_az_ort
+        state = AZ_ORT
+
+        seed_az_rate_tiers(state, state::RATE_TIERS)
+        seed_endorsements(state)
+      end
+
+      def self.seed_az_rate_tiers(state, rate_tiers, region: nil)
+        # AZ data is already in cents
+        schedule_data = rate_tiers.map do |row|
+          {
+            min: row[:min],
+            max: row[:max],
+            base: row[:base],
+            per_thousand: row[:per_thousand],
+            elc: row[:elc] || 0
+          }
+        end
+
+        # For region-specific rates, append region to rate_table
+        rate_table = region ? "original_region_#{region}" : "original"
+
+        Models::RateTier.seed(
+          schedule_data,
+          state_code: state::STATE_CODE,
+          underwriter_code: state::UNDERWRITER_CODE,
+          effective_date: state::EFFECTIVE_DATE,
+          expires_date: nil,
+          rate_type: "premium",
+          rate_table: rate_table
         )
       end
     end

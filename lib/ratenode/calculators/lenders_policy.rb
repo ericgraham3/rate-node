@@ -17,7 +17,7 @@ module RateNode
       end
 
       def state_rules
-        @state_rules ||= RateNode.rules_for(state)
+        @state_rules ||= RateNode.rules_for(state, underwriter: underwriter)
       end
 
       def calculate

@@ -1,25 +1,33 @@
-scenario_name,state,underwriter,transaction_type,purchase_price,loan_amount,prior_policy_amount,prior_policy_date,owners_policy_type,lender_policy_type,endorsements,cpl,property_type,expected_owners_premium,expected_lenders_premium,expected_endorsement_charges,expected_cpl_charges,expected_reissue_discount,expected_total
-CA_Purchase_Loan,CA,TRG,purchase,500000,400000,,,homeowner,standard,"CLTA 103.5, CLTA 110.9",FALSE,,1729,150,50,,,1929
-CA_Purchase_Cash,CA,TRG,purchase,400000,0,,,standard,standard,CLTA 103.5,FALSE,,1372,,25,,,1397
-NC_Purchase_Loan_Reissue,NC,TRG,purchase,60000,58200,35000,1/1/2020,standard,standard,"ALTA 8.1, ALTA 9",TRUE,,118.15,28.5,46,41.4,48.65,234.05
-NC_Purchase_Simple,NC,TRG,purchase,99999,79999,,,standard,standard,"ALTA 8.1, ALTA 9",TRUE,,278,28.5,46,69,,421.5
-NC_Purchase_Cash_Reissue,NC,TRG,purchase,100001,0,45000,1/1/2018,standard,standard,,FALSE,,232.27,,,,67.43,232.27
-NC_Purchase_Cash_Simple,NC,TRG,purchase,150000,0,,,standard,standard,,FALSE,,386.5,,,,,386.5
-TX_Lookup_25k,TX,,purchase,25000,0,,,standard,,,FALSE,,328,,,,,328
-TX_Lookup_50k,TX,,purchase,50000,0,,,standard,,,FALSE,,496,,,,,496
-TX_Lookup_75k,TX,,purchase,75000,0,,,standard,,,FALSE,,665,,,,,665
-TX_Lookup_100k,TX,,purchase,100000,0,,,standard,,,FALSE,,832,,,,,832
-TX_Formula_268k,TX,,purchase,268500,0,,,standard,,,FALSE,,1720,,,,,1720
-TX_Formula_4826k,TX,,purchase,4826600,0,,,standard,,,FALSE,,22144,,,,,22144
-TX_Formula_10902k,TX,,purchase,10902800,0,,,standard,,,FALSE,,43968,,,,,43968
-TX_Formula_17295k,TX,,purchase,17295100,0,,,standard,,,FALSE,,64425,,,,,64425
-TX_Formula_39351k,TX,,purchase,39351800,0,,,standard,,,FALSE,,105810,,,,,105810
-TX_Formula_75300k,TX,,purchase,75300200,0,,,standard,,,FALSE,,156909,,,,,156909
-TX_Formula_151250k,TX,,purchase,151250300,0,,,standard,,,FALSE,,254545,,,,,254545
-TX_Purchase_With_Loan,TX,,purchase,500000,400000,,,standard,standard,,FALSE,,2940,100,,,0,3040
-FL_Purchase_Simple,FL,TRG,purchase,200000,0,,,standard,,,FALSE,,1075,,,,,1075
-FL_Purchase_With_Loan,FL,TRG,purchase,300000,240000,,,standard,standard,,FALSE,,1575,25,,,0,1600
-FL_Purchase_Reissue,FL,TRG,purchase,200000,0,150000,1/1/2024,standard,,,FALSE,,787.5,,,,0,788
-FL_Endorsement_Combined,FL,TRG,purchase,250000,200000,,,standard,standard,ALTA 9,FALSE,,1325,25,67.5,,,1418
-FL_Endorsement_Property_Res,FL,TRG,purchase,150000,0,,,standard,,ALTA 3,FALSE,residential,825,,25,,,850
-FL_Endorsement_Property_Com,FL,TRG,purchase,150000,0,,,standard,,ALTA 3,FALSE,commercial,825,,100,,,925
+scenario_name,state,underwriter,transaction_type,purchase_price,loan_amount,prior_policy_amount,prior_policy_date,owners_policy_type,lender_policy_type,endorsements,is_hold_open,cpl,property_type,expected_owners_premium,expected_lenders_premium,expected_endorsement_charges,expected_cpl_charges,expected_reissue_discount,expected_total
+TX_Lookup_25k,TX,,purchase,25000,0,,,standard,,,,FALSE,,328,,,,,328
+TX_Lookup_50k,TX,,purchase,50000,0,,,standard,,,,FALSE,,496,,,,,496
+TX_Lookup_75k,TX,,purchase,75000,0,,,standard,,,,FALSE,,665,,,,,665
+TX_Lookup_100k,TX,,purchase,100000,0,,,standard,,,,FALSE,,832,,,,,832
+TX_Formula_268k,TX,,purchase,268500,0,,,standard,,,,FALSE,,1720,,,,,1720
+TX_Formula_4826k,TX,,purchase,4826600,0,,,standard,,,,FALSE,,22144,,,,,22144
+TX_Formula_10902k,TX,,purchase,10902800,0,,,standard,,,,FALSE,,43968,,,,,43968
+TX_Formula_17295k,TX,,purchase,17295100,0,,,standard,,,,FALSE,,64425,,,,,64425
+TX_Formula_39351k,TX,,purchase,39351800,0,,,standard,,,,FALSE,,105810,,,,,105810
+TX_Formula_75300k,TX,,purchase,75300200,0,,,standard,,,,FALSE,,156909,,,,,156909
+TX_Formula_151250k,TX,,purchase,151250300,0,,,standard,,,,FALSE,,254545,,,,,254545
+TX_Purchase_With_Loan,TX,,purchase,500000,400000,,,standard,standard,"710,088,507,000,810",,FALSE,,2940,100,170.65,,0,3210.65
+FL_Purchase_Simple,FL,,purchase,200000,0,,,standard,,,,FALSE,,1100,,,,,1075
+FL_Purchase_With_Loan,FL,,purchase,300000,240000,,,standard,standard,,,FALSE,,1575,25,,,0,1600
+FL_Purchase_Reissue,FL,,purchase,200000,0,150000,1/1/2024,standard,,,,FALSE,,730,,,,0,788
+FL_Endorsement_Combined,FL,,purchase,250000,200000,,,standard,standard,ALTA 9,,FALSE,,1325,25,135,,,1418
+AZ_Maricopa_Owners,AZ,TRG,purchase,500000,,,,standard,,,,,,1859,,,,,1859
+AZ_Maricopa_With_Loan,AZ,TRG,purchase,480000,450000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,1811,100,300,25,,2236
+AZ_Maricopa_Homeowners_Owners,AZ,TRG,purchase,500000,,,,homeowners,,,,,,2045,,,,,2045
+AZ_Maricopa_Homeowners_With_Loan,AZ,TRG,purchase,480000,450000,,,homeowners,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,1993,100,300,25,,2418
+AZ_Maricopa_Owners_Hold_Open_Initial,AZ,TRG,purchase,500000,,,,standard,,,TRUE,,,2324,,,,,2324
+AZ_Maricopa_Hold_Open_Final,AZ,TRG,purchase,575000,,500000,,standard,,,TRUE,,,181,,,,,181
+AZ_Pima_Owners,AZ,TRG,purchase,500000,,,,standard,,,,,,1950,,,,,1950
+AZ_Pima_With_Loan,AZ,TRG,purchase,480000,450000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,1900,100,300,25,,2325
+AZ_Pima_Homeowners_Owners,AZ,TRG,purchase,500000,,,,homeowners,,,,,,2145,,,,,2145
+AZ_Pima_Homeowners_With_Loan,AZ,TRG,purchase,480000,450000,,,homeowners,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,2090,100,300,25,,2515
+AZ_Pima_Owners_Hold_Open_Initial,AZ,TRG,purchase,500000,,,,standard,,,TRUE,,,2438,,,,,2438
+AZ_Pima_Hold_Open_Final,AZ,TRG,purchase,575000,,500000,,standard,,,TRUE,,,189,,,,,189
+AZ_Maricopa_Owners_ORT,AZ,ORT,purchase,500000,,,,standard,,,,,,2092,,,,,2092
+AZ_Maricopa_With_Loan_ORT,AZ,ORT,purchase,480000,450000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,2038,100,300,25,,2463
+AZ_Maricopa_Homeowners_Owners_ORT,AZ,ORT,purchase,500000,,,,homeowners,,,,,,2302,,,,,2302
+AZ_Maricopa_Homeowners_With_Loan_ORT,AZ,ORT,purchase,480000,450000,,,homeowners,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,2242,100,300,25,,2667

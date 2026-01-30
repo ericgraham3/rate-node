@@ -8,7 +8,7 @@ module RateNode
                 :loan_amount_cents, :owner_policy_type, :include_lenders_policy,
                 :endorsement_codes, :state, :underwriter, :as_of_date,
                 :include_cpl, :prior_policy_date, :prior_policy_amount_cents,
-                :property_type
+                :property_type, :county, :is_hold_open
 
     def initialize(params)
       @transaction_type = params[:transaction_type]&.to_sym || :purchase
@@ -25,6 +25,8 @@ module RateNode
       @prior_policy_date = params[:prior_policy_date]
       @prior_policy_amount_cents = params[:prior_policy_amount_cents]&.to_i
       @property_type = params[:property_type]&.to_sym
+      @county = params[:county]
+      @is_hold_open = params.fetch(:is_hold_open, false)
     end
 
     def calculate
@@ -42,6 +44,13 @@ module RateNode
 
     def calculate_purchase
       owners = calculate_owners_policy
+
+      # For AZ hold-open final, only calculate the incremental owner's premium
+      # No lender's policy, endorsements, or CPL
+      if state == "AZ" && is_hold_open && prior_policy_amount_cents
+        return build_result(owners, nil, [], nil)
+      end
+
       lenders = include_lenders_policy ? calculate_lenders_policy(owners[:liability_cents]) : nil
 
       # For FL percentage_combined endorsements, we need the combined premium
@@ -72,23 +81,44 @@ module RateNode
 
     def calculate_owners_policy
       owner_liability = purchase_price_cents
-      calc = Calculators::OwnersPolicy.new(
-        liability_cents: owner_liability,
-        policy_type: owner_policy_type,
-        state: state,
-        underwriter: underwriter,
-        as_of_date: as_of_date,
-        prior_policy_date: prior_policy_date,
-        prior_policy_amount_cents: prior_policy_amount_cents
-      )
 
-      {
-        type: owner_policy_type.to_s,
-        liability_cents: owner_liability,
-        premium_cents: calc.calculate,
-        line_item: calc.line_item,
-        reissue_discount_cents: calc.reissue_discount_amount
-      }
+      if state == "AZ"
+        calc = Calculators::AZCalculator.new(
+          liability_cents: owner_liability,
+          policy_type: owner_policy_type,
+          underwriter: underwriter,
+          county: county,
+          as_of_date: as_of_date,
+          is_hold_open: is_hold_open,
+          prior_policy_amount_cents: prior_policy_amount_cents
+        )
+
+        {
+          type: owner_policy_type.to_s,
+          liability_cents: owner_liability,
+          premium_cents: calc.calculate,
+          line_item: calc.line_item,
+          reissue_discount_cents: 0
+        }
+      else
+        calc = Calculators::OwnersPolicy.new(
+          liability_cents: owner_liability,
+          policy_type: owner_policy_type,
+          state: state,
+          underwriter: underwriter,
+          as_of_date: as_of_date,
+          prior_policy_date: prior_policy_date,
+          prior_policy_amount_cents: prior_policy_amount_cents
+        )
+
+        {
+          type: owner_policy_type.to_s,
+          liability_cents: owner_liability,
+          premium_cents: calc.calculate,
+          line_item: calc.line_item,
+          reissue_discount_cents: calc.reissue_discount_amount
+        }
+      end
     end
 
     def calculate_lenders_policy(owner_liability_cents)
