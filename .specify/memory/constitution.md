@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.4.0 → 1.5.0
-Modified sections:
-  - Quality Gates > Before Extracting Shared Code: Added human-direction requirement
-    and permitted/approved utility distinction to align with Principle III agent constraints.
+Version change: 1.5.0 → 1.6.0
+Modified principles:
+  - Principle I (State Isolation): Added agent constraints prohibiting cross-state
+    dependencies, shared base classes, or unified implementations without human direction.
 Added sections: None
 Removed sections: None
 Templates requiring updates:
@@ -20,7 +20,12 @@ Follow-up TODOs: None
 
 ### I. State Isolation
 
-Each state calculator is fully isolated. Changes to one state's implementation MUST NOT affect another state's behavior. Even if two states appear similar, they maintain separate implementations until shared patterns are proven across 2+ states.
+Each state calculator is fully isolated. Changes to one state's implementation MUST NOT affect another state's behavior. Even if two states appear similar, they maintain separate implementations until shared patterns are proven across 2+ states AND a human explicitly directs unification.
+
+**Agent Constraints**: Agents MUST NOT create cross-state dependencies, shared base classes, or unified implementations without explicit human direction. When implementing a feature that exists in another state, agents MUST:
+1. Implement it independently in the target state's calculator
+2. Not import, inherit from, or call another state's implementation
+3. Report observed similarities for human review (do not act on them)
 
 **Rationale**: Title insurance rates are state-regulated with genuinely different calculation logic—not just different parameters. Over-abstracting fights the domain. A bug fix to FL logic MUST NOT be able to accidentally change TX behavior.
 
@@ -139,4 +144,4 @@ This constitution supersedes ad-hoc practices. All PRs and code reviews MUST ver
 - Are CSV scenarios updated for affected states? (Principle V)
 - Can a non-technical SME understand the change? (Principle VI)
 
-**Version**: 1.5.0 | **Ratified**: 2026-02-03 | **Last Amended**: 2026-02-03
+**Version**: 1.6.0 | **Ratified**: 2026-02-03 | **Last Amended**: 2026-02-03
