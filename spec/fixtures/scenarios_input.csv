@@ -31,3 +31,8 @@ AZ_Maricopa_Owners_ORT,AZ,ORT,purchase,500000,,,,standard,,,,,,2092,,,,,2092
 AZ_Maricopa_With_Loan_ORT,AZ,ORT,purchase,480000,450000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,2038,100,300,25,,2463
 AZ_Maricopa_Homeowners_Owners_ORT,AZ,ORT,purchase,500000,,,,homeowners,,,,,,2302,,,,,2302
 AZ_Maricopa_Homeowners_With_Loan_ORT,AZ,ORT,purchase,480000,450000,,,homeowners,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,TRUE,,2242,100,300,25,,2667
+NC_purchase_loan_reissue,NC,TRG,purchase,500000,400000,,,standard,standard,"ALTA 8.1, ALTA 9",,FALSE,,898.5,28.5,46,,247.5,973
+NC_purchase_loan,NC,TRG,purchase,500000,400000,,,standard,standard,"ALTA 8.1, ALTA 9",,FALSE,,1146,28.5,46,,,1220.5
+NC_purchase_cash,NC,TRG,purchase,500000,,,,standard,,,,,,1146,,,,,1146
+CA_purchase_cash,CA,TRG,purchase,500000,,,,standard,,,,,,1571,,,,,1571
+CA_purchase_loan,CA,TRG,purchase,500000,400000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,FALSE,,1571,150,0,,,1721
