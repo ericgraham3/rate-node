@@ -25,7 +25,18 @@
       "Bash(bundle exec rake:*)",
       "Bash(ruby -e:*)",
       "Bash(ruby:*)",
-      "Bash(bundle exec bin/ratenode:*)"
+      "Bash(bundle exec bin/ratenode:*)",
+      "Bash(git fetch:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(wc:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(git stash:*)",
+      "Bash(grep:*)",
+      "Bash(echo \"Checking for remaining AZCalculator references...\" grep -rn \"AZCalculator\" lib/ spec/ --include=\"*.rb\")",
+      "Bash(echo \"No references found\" echo \"\" echo \"Checking for remaining OwnersPolicy references...\" grep -rn \"OwnersPolicy\" lib/ spec/ --include=\"*.rb\")",
+      "Bash(gh auth:*)"
     ],
     "deny": [],
     "ask": []

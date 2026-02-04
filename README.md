@@ -1,5 +1,43 @@
 # RateNode
 
+## Recent Updates (2/3/2026)
+
+**State Calculator Plugin Architecture:**
+
+- **Refactored state-specific logic into isolated plugin calculators**:
+  - New `StateCalculatorFactory` routes calculations to state-specific calculators
+  - New `BaseStateCalculator` abstract contract defines the interface all state calculators must implement
+  - Each state now has its own calculator file in `lib/ratenode/calculators/states/`
+  - State calculators are stateless singletons with clean separation of concerns
+
+- **New state calculator files**:
+  - `lib/ratenode/calculators/states/az.rb` - Arizona (migrated from az_calculator.rb)
+  - `lib/ratenode/calculators/states/fl.rb` - Florida (extracted from owners_policy.rb)
+  - `lib/ratenode/calculators/states/ca.rb` - California (extracted from owners_policy.rb)
+  - `lib/ratenode/calculators/states/tx.rb` - Texas (extracted from owners_policy.rb)
+  - `lib/ratenode/calculators/states/nc.rb` - North Carolina (extracted from owners_policy.rb)
+
+- **New shared utilities**:
+  - `lib/ratenode/calculators/utilities/rounding.rb` - Consolidated rounding functions
+  - `lib/ratenode/calculators/utilities/tier_lookup.rb` - Tiered rate table traversal
+
+- **Removed deprecated files**:
+  - Deleted `lib/ratenode/calculators/az_calculator.rb` (migrated to states/az.rb)
+  - Deleted `lib/ratenode/calculators/owners_policy.rb` (split across state calculators)
+
+- **CLI enhancements** - Added missing options:
+  - `--prior_policy_amount` - Prior policy amount in dollars (for reissue rates)
+  - `--prior_policy_date` - Prior policy date (for reissue eligibility)
+  - `--cpl` - Include Closing Protection Letter
+  - `--county` - County name (for AZ region/area lookup)
+  - `--hold_open` - Hold-open transaction (AZ only)
+
+- **Known issue documented**: NC reissue rate bug (FR-013) - discount not being applied correctly in some scenarios. Tracked for future fix.
+
+- **37 test scenarios** (36 passing, 1 known NC reissue issue)
+
+---
+
 ## Recent Updates (1/30/2026)
 
 **TX Endorsement Bugfix:**
@@ -30,7 +68,7 @@
   - Corrected to 10% of combined premium (was incorrectly 5%)
   - Per FL rate manual: "Min. 10% of underlying policy premium"
 
-- **All 32 test scenarios now pass** (12 TX, 4 FL, 16 AZ)
+- **All 32 test scenarios passed at time of release** (12 TX, 4 FL, 16 AZ)
 
 ---
 
@@ -118,7 +156,12 @@
 1. Add entry to `STATE_RULES` in `lib/ratenode/state_rules.rb` (use nested `underwriters:` structure)
 2. Create `db/seeds/data/{state}_rates.rb` with rate tiers, endorsements, etc.
 3. Add `seed_{state}()` method in `db/seeds/rates.rb`
-4. If state has unique calculation logic (like AZ hold-open), create `lib/ratenode/calculators/{state}_calculator.rb`
+4. Create state calculator in `lib/ratenode/calculators/states/{state}.rb`:
+   - Inherit from `BaseStateCalculator`
+   - Implement `calculate_owners_premium(params)` and `calculate_lenders_premium(params)`
+   - Implement `line_item(params)` and `reissue_discount_amount(params)`
+5. Register the state in `StateCalculatorFactory#build_calculator`
+6. Add require statement in `lib/ratenode.rb`
 
 ---
 
@@ -131,11 +174,13 @@
   ├── spec_helper.rb              # Simplified RSpec config
   ├── integration/
   │   └── csv_scenarios_spec.rb   # Single test file for all scenarios
+  ├── unit/                       # Unit tests for new components
+  │   └── utilities/              # Utility module tests
   └── fixtures/
-      └── scenarios_input.csv     # Test data (18 scenarios: CA, NC, TX)
+      └── scenarios_input.csv     # Test data (37 scenarios: AZ, CA, FL, NC, TX)
   ```
 - **Enhanced test output**: Checkmarks (✓/✗), tolerance warnings (±$2.00), summary section
-- **32 test scenarios**: 12 TX, 4 FL, 16 AZ (all passing)
+- **37 test scenarios**: 12 TX, 4 FL, 16 AZ, 3 NC, 2 CA (36 passing, 1 known NC reissue issue)
 
 ---
 
@@ -191,13 +236,22 @@ lib/ratenode/
 ├── state_rules.rb              # Centralized state-specific constants
 ├── calculator.rb               # Main calculation orchestrator
 ├── calculators/
+│   ├── base_state_calculator.rb    # Abstract contract for state calculators
+│   ├── state_calculator_factory.rb # Factory for routing to state calculators
 │   ├── base_rate.rb            # Base rate lookup/calculation
-│   ├── owners_policy.rb        # Owner's policy with reissue discount
 │   ├── lenders_policy.rb       # Lender's policy (concurrent/standalone)
 │   ├── cpl_calculator.rb       # Closing Protection Letter
 │   ├── endorsement_calculator.rb
 │   ├── refinance.rb
-│   └── az_calculator.rb        # Arizona-specific calculator (hold-open, regions)
+│   ├── states/                 # State-specific calculator plugins
+│   │   ├── az.rb               # Arizona (TRG/ORT, hold-open, regions)
+│   │   ├── ca.rb               # California
+│   │   ├── fl.rb               # Florida (reissue rate tables)
+│   │   ├── nc.rb               # North Carolina (percentage reissue)
+│   │   └── tx.rb               # Texas (formula-based, no rounding)
+│   └── utilities/              # Shared utility modules
+│       ├── rounding.rb         # Liability rounding functions
+│       └── tier_lookup.rb      # Tiered rate table traversal
 └── models/
     ├── rate_tier.rb            # Rate tier lookup and tiered calculation
     ├── endorsement.rb          # Endorsement pricing
