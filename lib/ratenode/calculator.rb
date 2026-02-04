@@ -82,43 +82,26 @@ module RateNode
     def calculate_owners_policy
       owner_liability = purchase_price_cents
 
-      if state == "AZ"
-        calc = Calculators::AZCalculator.new(
-          liability_cents: owner_liability,
-          policy_type: owner_policy_type,
-          underwriter: underwriter,
-          county: county,
-          as_of_date: as_of_date,
-          is_hold_open: is_hold_open,
-          prior_policy_amount_cents: prior_policy_amount_cents
-        )
+      # Use the state calculator factory to get the appropriate calculator
+      calculator = StateCalculatorFactory.for(state)
+      params = {
+        liability_cents: owner_liability,
+        policy_type: owner_policy_type,
+        underwriter: underwriter,
+        as_of_date: as_of_date,
+        prior_policy_date: prior_policy_date,
+        prior_policy_amount_cents: prior_policy_amount_cents,
+        county: county,
+        is_hold_open: is_hold_open
+      }
 
-        {
-          type: owner_policy_type.to_s,
-          liability_cents: owner_liability,
-          premium_cents: calc.calculate,
-          line_item: calc.line_item,
-          reissue_discount_cents: 0
-        }
-      else
-        calc = Calculators::OwnersPolicy.new(
-          liability_cents: owner_liability,
-          policy_type: owner_policy_type,
-          state: state,
-          underwriter: underwriter,
-          as_of_date: as_of_date,
-          prior_policy_date: prior_policy_date,
-          prior_policy_amount_cents: prior_policy_amount_cents
-        )
-
-        {
-          type: owner_policy_type.to_s,
-          liability_cents: owner_liability,
-          premium_cents: calc.calculate,
-          line_item: calc.line_item,
-          reissue_discount_cents: calc.reissue_discount_amount
-        }
-      end
+      {
+        type: owner_policy_type.to_s,
+        liability_cents: owner_liability,
+        premium_cents: calculator.calculate_owners_premium(params),
+        line_item: calculator.line_item(params),
+        reissue_discount_cents: calculator.reissue_discount_amount(params)
+      }
     end
 
     def calculate_lenders_policy(owner_liability_cents)

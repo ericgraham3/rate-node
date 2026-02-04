@@ -17,6 +17,11 @@ module RateNode
     option :endorsements, type: :string, desc: "Comma-separated endorsement codes"
     option :address, type: :string, desc: "Property address"
     option :property_type, type: :string, desc: "Property type: residential or commercial (FL only)"
+    option :cpl, type: :boolean, default: false, desc: "Include Closing Protection Letter"
+    option :prior_policy_amount, type: :numeric, desc: "Prior policy amount in dollars (for reissue rates)"
+    option :prior_policy_date, type: :string, desc: "Prior policy date (YYYY-MM-DD, for reissue eligibility)"
+    option :county, type: :string, desc: "County name (for AZ region/area lookup)"
+    option :hold_open, type: :boolean, default: false, desc: "Hold-open transaction (AZ only)"
     option :json, type: :boolean, default: false, desc: "Output as JSON"
 
     def calculate
@@ -34,7 +39,12 @@ module RateNode
         state: options[:state],
         underwriter: options[:underwriter],
         as_of_date: parse_date(options[:as_of_date]),
-        property_type: options[:property_type]
+        property_type: options[:property_type],
+        include_cpl: options[:cpl],
+        prior_policy_amount_cents: dollars_to_cents(options[:prior_policy_amount]),
+        prior_policy_date: options[:prior_policy_date] ? parse_date(options[:prior_policy_date]) : nil,
+        county: options[:county],
+        is_hold_open: options[:hold_open]
       ).calculate
 
       if options[:json]
