@@ -25,7 +25,13 @@
       "Bash(bundle exec rake:*)",
       "Bash(ruby -e:*)",
       "Bash(ruby:*)",
-      "Bash(bundle exec bin/ratenode:*)"
+      "Bash(bundle exec bin/ratenode:*)",
+      "Bash(git fetch:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(wc:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)"
     ],
     "deny": [],
     "ask": []
