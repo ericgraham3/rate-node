@@ -9,20 +9,12 @@
 - **Zero change to seeded data**: Before/after comparison confirmed identical rate-tier content for NC, CA, and TX. All 38 CSV scenario tests pass without modification.
 - FL and AZ are unaffected — they use dedicated seed methods that do not go through the shared seeder.
 
----
-
-## Recent Updates (2/5/2026)
-
 **NC Simultaneous Issue Base Premium Fix (PR-4):**
 
 - **Fixed NC base premium calculation for simultaneous issue when loan exceeds owner coverage**: The orchestrator now forwards `loan_amount_cents` to all state calculators via the params hash. The NC calculator applies PR-4 of the NC rate manual — `max(owner_coverage, loan_coverage)` — as the base-premium input, while preserving the original owner coverage in the `liability_cents` output and the reissue discount path.
 - Example: Owner $300,000 / Loan $350,000 now correctly returns owner premium $820.50, lender concurrent fee $28.50, total $849.00 (was previously under-billed at $736.50 owner premium because it computed on $300k instead of $350k)
 - No behavioural change to other states — CA, TX, FL, and AZ ignore the new key in the params hash
 - 38 test scenarios passing (1 new: `NC_purchase_loan_exceeds_owner`)
-
----
-
-## Recent Updates (2/5/2026)
 
 **NC Configuration Corrections (per rate manual PR-1 / PR-10):**
 
