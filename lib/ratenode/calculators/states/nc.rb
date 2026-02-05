@@ -9,23 +9,6 @@ module RateNode
     # NC uses percentage-based reissue discounts (50%) instead of a separate rate table.
     # NC always uses flat fee for concurrent lender's policy regardless of loan vs owner amount.
     #
-    # TODO: FR-013 - NC reissue rate bug
-    # The NC reissue discount calculation may have issues with:
-    # 1. Discount percentage may be hardcoded vs. configurable in state_rules.rb
-    # 2. Eligibility window check may use incorrect date logic
-    # 3. Discount may apply to wrong base (before vs. after policy type multiplier)
-    # This behavior is preserved during refactor to maintain backwards compatibility.
-    # Fix to be tracked separately post-refactor.
-    #
-    # Reproduction (from CSV scenario NC_purchase_loan_reissue):
-    #   - Purchase price: $250,000
-    #   - Prior policy amount: $200,000
-    #   - Prior policy date: 1 year ago
-    #   - Expected owners premium: $898.50 (with reissue discount)
-    #   - Actual owners premium: $1146.00 (without discount applied)
-    #   - Expected reissue discount: $247.50
-    #   - Actual reissue discount: $0.00
-    #
     class NC < BaseStateCalculator
       # Calculate owner's title insurance premium for North Carolina.
       #
@@ -110,19 +93,7 @@ module RateNode
         @prior_policy_amount_cents = params[:prior_policy_amount_cents]
         @prior_policy_date = params[:prior_policy_date]
 
-        return 0 unless eligible_for_reissue_discount?
-
-        # Calculate full premium first
-        base_rate = Calculators::BaseRate.new(
-          @liability_cents,
-          state: "NC",
-          underwriter: @underwriter,
-          as_of_date: @as_of_date
-        ).calculate
-        multiplier = Models::PolicyType.multiplier_for(@policy_type, state: "NC", underwriter: @underwriter, as_of_date: @as_of_date)
-        full_premium = (base_rate * multiplier).round
-
-        calculate_reissue_discount(full_premium)
+        calculate_reissue_discount
       end
 
       private
@@ -143,13 +114,13 @@ module RateNode
 
         # Apply reissue discount if applicable (NC style)
         if eligible_for_reissue_discount?
-          full_premium - calculate_reissue_discount(full_premium)
+          full_premium - calculate_reissue_discount
         else
           full_premium
         end
       end
 
-      def calculate_reissue_discount(full_premium)
+      def calculate_reissue_discount
         return 0 unless eligible_for_reissue_discount?
 
         discount_percent = state_rules[:reissue_discount_percent]
@@ -157,17 +128,24 @@ module RateNode
         # Calculate the portion of current liability covered by prior policy
         discountable_portion_cents = [@liability_cents, @prior_policy_amount_cents].min
 
-        # Calculate base rate for discountable portion
-        # TODO: FR-013 - This proportional approximation may be incorrect
-        discountable_base_rate = if discountable_portion_cents == @liability_cents
-                                   # All of current policy is discountable
-                                   full_premium
-                                 else
-                                   # Proportional discount based on ratio
-                                   (full_premium * discountable_portion_cents.to_f / @liability_cents).round
-                                 end
+        # Calculate the actual tiered rate on the discountable portion
+        discountable_tiered_rate = Models::RateTier.calculate_rate(
+          discountable_portion_cents,
+          state: "NC",
+          underwriter: @underwriter,
+          as_of_date: @as_of_date
+        )
 
-        (discountable_base_rate * discount_percent).round
+        # Apply policy type multiplier to the discount base
+        multiplier = Models::PolicyType.multiplier_for(
+          @policy_type,
+          state: "NC",
+          underwriter: @underwriter,
+          as_of_date: @as_of_date
+        )
+        discountable_base = (discountable_tiered_rate * multiplier).round
+
+        (discountable_base * discount_percent).round
       end
 
       def eligible_for_reissue_discount?
