@@ -11,6 +11,9 @@ module RateNode
       STATE_CODE = "TX"
       UNDERWRITER_CODE = "DEFAULT"
 
+      # Unit declaration for shared seeder: rate values are already in cents, pass through unchanged
+      RATE_TIERS_UNIT = :cents
+
       # Full rate tier data for $25,000 to $100,000
       # Format: { min: cents, max: cents, base: cents, per_thousand: nil, elc: 0 }
       RATE_TIERS = [

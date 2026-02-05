@@ -112,13 +112,18 @@ module RateNode
       end
 
       def self.seed_rate_tiers(state, rate_type: nil)
-        # Detect if data is already in cents (TX format) vs dollars (CA/NC format)
-        # TX data has min values like 2_500_000 (already cents for $25,000)
-        # CA/NC data has min values like 0, 20_000 (dollars that need conversion)
-        already_in_cents = state::RATE_TIERS.first && state::RATE_TIERS.first[:min] >= 100_000
+        # Read explicit unit declaration (required)
+        unless state.const_defined?(:RATE_TIERS_UNIT)
+          raise ArgumentError, "#{state}::RATE_TIERS_UNIT must be declared (:dollars or :cents)"
+        end
 
-        schedule_data = if already_in_cents
-          # TX format - data is already in cents
+        unit = state::RATE_TIERS_UNIT
+        unless [:dollars, :cents].include?(unit)
+          raise ArgumentError, "#{state}::RATE_TIERS_UNIT must be :dollars or :cents, got #{unit.inspect}"
+        end
+
+        schedule_data = if unit == :cents
+          # Data is already in cents (TX format) - pass through unchanged
           state::RATE_TIERS.map do |row|
             {
               min: row[:min],
@@ -129,7 +134,7 @@ module RateNode
             }
           end
         else
-          # CA/NC format - convert dollars to cents
+          # Data is in dollars (CA/NC format) - convert to cents
           state::RATE_TIERS.map do |row|
             {
               min: row[:min] * 100,
