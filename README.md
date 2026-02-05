@@ -2,6 +2,17 @@
 
 ## Recent Updates (2/5/2026)
 
+**Explicit Seed Unit Declaration (006-explicit-seed-units):**
+
+- **Replaced the value-inspection heuristic in the shared rate-tier seeder with explicit unit declarations**: Each state module that routes through `seed_rate_tiers()` now declares its unit convention via a `RATE_TIERS_UNIT` constant co-located with the rate data. NC and CA declare `:dollars` (values are multiplied by 100 before insertion); TX declares `:cents` (values are inserted as-is). The old heuristic (`first tier min >= 100_000 → assume cents`) has been removed entirely.
+- **Added fail-fast error guards**: If a state module is missing `RATE_TIERS_UNIT` or carries an unrecognized value, the seeder raises an `ArgumentError` at seed time with a clear message naming the state and the expected values. No silent fallback.
+- **Zero change to seeded data**: Before/after comparison confirmed identical rate-tier content for NC, CA, and TX. All 38 CSV scenario tests pass without modification.
+- FL and AZ are unaffected — they use dedicated seed methods that do not go through the shared seeder.
+
+---
+
+## Recent Updates (2/5/2026)
+
 **NC Simultaneous Issue Base Premium Fix (PR-4):**
 
 - **Fixed NC base premium calculation for simultaneous issue when loan exceeds owner coverage**: The orchestrator now forwards `loan_amount_cents` to all state calculators via the params hash. The NC calculator applies PR-4 of the NC rate manual — `max(owner_coverage, loan_coverage)` — as the base-premium input, while preserving the original owner coverage in the `liability_cents` output and the reissue discount path.

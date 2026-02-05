@@ -9,6 +9,9 @@ module RateNode
       STATE_CODE = "NC"
       UNDERWRITER_CODE = "TRG"
 
+      # Unit declaration for shared seeder: rate values are in dollars, convert to cents
+      RATE_TIERS_UNIT = :dollars
+
       # Tiered rate structure: calculate by summing across applicable brackets
       RATE_TIERS = [
         # Up to $100,000: $2.78 per thousand

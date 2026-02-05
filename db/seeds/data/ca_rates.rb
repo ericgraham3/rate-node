@@ -9,6 +9,9 @@ module RateNode
       STATE_CODE = "CA"
       UNDERWRITER_CODE = "TRG"
 
+      # Unit declaration for shared seeder: rate values are in dollars, convert to cents
+      RATE_TIERS_UNIT = :dollars
+
       RATE_TIERS = [
         { min: 0, max: 20_000, rate: 609, elc: 463 },
         { min: 20_001, max: 30_000, rate: 609, elc: 463 },
