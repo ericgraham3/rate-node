@@ -26,3 +26,5 @@ db/ratenode.db
 # Project specific
 refactor_plan.md
 docs/implementation_notes
+.claude/settings.local.json
+
