@@ -29,6 +29,7 @@ module RateNode
         @as_of_date = params[:as_of_date] || Date.today
         @prior_policy_amount_cents = params[:prior_policy_amount_cents]
         @prior_policy_date = params[:prior_policy_date]
+        @loan_amount_cents = params[:loan_amount_cents]
 
         calculate_standard
       end
@@ -103,8 +104,15 @@ module RateNode
       end
 
       def calculate_standard
+        # PR-4: For simultaneous issue, base premium is computed on max(owner, loan)
+        premium_input = if @loan_amount_cents && @loan_amount_cents > 0
+                          [@liability_cents, @loan_amount_cents].max
+                        else
+                          @liability_cents
+                        end
+
         base_rate = Calculators::BaseRate.new(
-          @liability_cents,
+          premium_input,
           state: "NC",
           underwriter: @underwriter,
           as_of_date: @as_of_date
