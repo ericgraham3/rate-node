@@ -34,5 +34,6 @@ AZ_Maricopa_Homeowners_With_Loan_ORT,AZ,ORT,purchase,480000,450000,,,homeowners,
 NC_purchase_loan_reissue,NC,TRG,purchase,500000,400000,200000,01/01/2024,standard,standard,"ALTA 8.1, ALTA 9",,FALSE,,898.5,28.5,46,,247.5,973
 NC_purchase_loan,NC,TRG,purchase,500000,400000,,,standard,standard,"ALTA 8.1, ALTA 9",,FALSE,,1146,28.5,46,,,1220.5
 NC_purchase_cash,NC,TRG,purchase,500000,,,,standard,,,,,,1146,,,,,1146
+NC_purchase_loan_exceeds_owner,NC,TRG,purchase,300000,350000,,,standard,standard,,,FALSE,,820.5,28.5,,,,849
 CA_purchase_cash,CA,TRG,purchase,500000,,,,standard,,,,,,1571,,,,,1571
 CA_purchase_loan,CA,TRG,purchase,500000,400000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,FALSE,,1571,150,0,,,1721

@@ -92,7 +92,8 @@ module RateNode
         prior_policy_date: prior_policy_date,
         prior_policy_amount_cents: prior_policy_amount_cents,
         county: county,
-        is_hold_open: is_hold_open
+        is_hold_open: is_hold_open,
+        loan_amount_cents: include_lenders_policy ? loan_amount_cents : nil
       }
 
       {
