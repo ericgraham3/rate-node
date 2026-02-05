@@ -18,7 +18,7 @@
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
 - [x] All acceptance scenarios are defined
-- [x] Edge cases are identified
+- [x] Edge cases are identified and resolved to definitive statements
 - [x] Scope is clearly bounded
 - [x] Dependencies and assumptions identified
 
@@ -31,4 +31,8 @@
 
 ## Notes
 
-All items passed on first validation pass. No iterations required.
+- Clarification session 2026-02-04: 3 questions asked and answered.
+- FR-007 (new edge-case test scaffolding) removed — CSV scenario suite is the sole test authority; new rows are human-authored and out of scope.
+- Out-of-scope observation logged in Assumptions: ALTA 9 itself may be missing `lender_only: true` — separate issue to track.
+- All edge-case bullets resolved from open questions to definitive statements.
+- Spec is clear for planning.

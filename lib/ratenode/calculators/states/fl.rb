@@ -210,7 +210,7 @@ module RateNode
         return false unless eligibility_years
 
         years_since_prior = ((@as_of_date - @prior_policy_date) / 365.25).floor
-        years_since_prior <= eligibility_years
+        years_since_prior < eligibility_years
       end
 
       def policy_type_label(policy_type)

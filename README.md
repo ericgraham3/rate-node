@@ -1,5 +1,16 @@
 # RateNode
 
+## Recent Updates (2/4/2026)
+
+**FL Rate Calculator Fixes:**
+
+- **Fixed ALTA 6 and ALTA 6.2 endorsements**: Changed from `no_charge` to flat $25.00 fee per FL rate manual
+- **Fixed ALTA 9.3 endorsement**: Changed from `no_charge` to 10% of combined premium with $25.00 minimum
+- **Added ALTA 9.1 and ALTA 9.2 endorsements**: New owner endorsements at 10% of combined premium with $25.00 minimum
+- **Fixed reissue eligibility boundary**: Changed from inclusive (`<=`) to exclusive (`<`) comparison — prior policy exactly 3 years old no longer qualifies for reissue rates (per FL rate manual "less than three years")
+
+---
+
 ## Recent Updates (2/3/2026)
 
 **State Calculator Plugin Architecture:**
