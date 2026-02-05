@@ -2,6 +2,11 @@
 
 ## Recent Updates (2/4/2026)
 
+**NC Reissue Discount Fix:**
+
+- **Fixed NC reissue discount calculation**: The discount now correctly uses the actual tiered rate on the discountable portion (MIN of liability, prior policy amount) instead of a proportional approximation. This fixes scenarios where liability differs from the prior policy amount — the old proportional method produced incorrect discounts because NC rates are tiered, not flat.
+- Example: $400k liability / $250k prior now correctly returns $627.25 premium with $301.75 discount (was $638.69 / $290.31)
+
 **FL Rate Calculator Fixes:**
 
 - **Fixed ALTA 6 and ALTA 6.2 endorsements**: Changed from `no_charge` to flat $25.00 fee per FL rate manual
@@ -43,9 +48,7 @@
   - `--county` - County name (for AZ region/area lookup)
   - `--hold_open` - Hold-open transaction (AZ only)
 
-- **Known issue documented**: NC reissue rate bug (FR-013) - discount not being applied correctly in some scenarios. Tracked for future fix.
-
-- **37 test scenarios** (36 passing, 1 known NC reissue issue)
+- **37 test scenarios** passing
 
 ---
 
