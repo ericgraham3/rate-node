@@ -58,15 +58,17 @@ module RateNode
         { code: "ALTA 4.1", form_code: "ALTA 4.1", name: "Condominium (Planned)", pricing_type: "flat", base_amount: 2500 },
         { code: "ALTA 5", form_code: "ALTA 5", name: "Planned Unit Development", pricing_type: "flat", base_amount: 2500 },
         { code: "ALTA 5.1", form_code: "ALTA 5.1", name: "Planned Unit Development (Planned)", pricing_type: "flat", base_amount: 2500 },
-        { code: "ALTA 6", form_code: "ALTA 6", name: "Variable Rate Mortgage", pricing_type: "no_charge", lender_only: true },
-        { code: "ALTA 6.2", form_code: "ALTA 6.2", name: "Variable Rate Mortgage, Negative Amortization", pricing_type: "no_charge", lender_only: true },
+        { code: "ALTA 6", form_code: "ALTA 6", name: "Variable Rate Mortgage", pricing_type: "flat", base_amount: 2500, lender_only: true },
+        { code: "ALTA 6.2", form_code: "ALTA 6.2", name: "Variable Rate Mortgage, Negative Amortization", pricing_type: "flat", base_amount: 2500, lender_only: true },
         { code: "ALTA 7", form_code: "ALTA 7", name: "Manufactured Housing Unit", pricing_type: "flat", base_amount: 5000 },
         { code: "ALTA 8.1", form_code: "ALTA 8.1", name: "Environmental Protection Lien", pricing_type: "flat", base_amount: 2500 },
 
         # Percentage on combined premium (FL-specific)
         # ALTA 9: 10% of combined owner's + lender's premium
         { code: "ALTA 9", form_code: "ALTA 9", name: "Restrictions, Encroachments, Minerals", pricing_type: "percentage_combined", percentage: 0.10, min: 2500 },
-        { code: "ALTA 9.3", form_code: "ALTA 9.3", name: "Covenants, Conditions and Restrictions - Loan Policy", pricing_type: "no_charge", lender_only: true },
+        { code: "ALTA 9.1", form_code: "ALTA 9.1", name: "Restrictions, Encroachments, Minerals - Owner Policy", pricing_type: "percentage_combined", percentage: 0.10, min: 2500 },
+        { code: "ALTA 9.2", form_code: "ALTA 9.2", name: "Restrictions, Encroachments, Minerals - Owner Policy (Planned)", pricing_type: "percentage_combined", percentage: 0.10, min: 2500 },
+        { code: "ALTA 9.3", form_code: "ALTA 9.3", name: "Covenants, Conditions and Restrictions - Loan Policy", pricing_type: "percentage_combined", percentage: 0.10, min: 2500, lender_only: true },
 
         # Location endorsement: 10% of combined premium
         { code: "ALTA 22", form_code: "ALTA 22", name: "Location", pricing_type: "percentage_combined", percentage: 0.10, min: 5000 },
