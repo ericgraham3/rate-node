@@ -216,7 +216,7 @@ module RateNode
       def policy_type_label(policy_type)
         case policy_type
         when :standard then "Standard"
-        when :homeowner then "Homeowner's"
+        when :homeowners then "Homeowner's"
         when :extended then "Extended"
         else policy_type.to_s.capitalize
         end

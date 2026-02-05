@@ -1,5 +1,15 @@
 # RateNode
 
+## Recent Updates (2/5/2026)
+
+**NC Configuration Corrections (per rate manual PR-1 / PR-10):**
+
+- **Corrected NC endorsement catalogue**: Removed 46 stale entries carried over from other states' manuals. NC now contains exactly three endorsements per rate manual PR-10: ALTA 5, ALTA 8.1, and ALTA 9 — each priced at $23.00 flat.
+- **Unified policy-type symbol to `:homeowners`**: The symbol `:homeowner` (missing trailing "s") was inconsistent with AZ, which is locked by CSV fixtures. Renamed the key and `name` value in `PolicyType::TYPES`, `PolicyType::NC_TYPES`, all four non-AZ `STATE_RULES` multiplier maps, and the `format_policy_type` case branches in CA, FL, NC, and TX calculators. AZ and `DEFAULT_STATE_RULES` left untouched.
+- **Set NC minimum premium and rounding increment**: `minimum_premium_cents` changed from 0 to 5\_600 ($56.00) and `rounding_increment_cents` changed from 1\_000\_000 ($10,000) to 100\_000 ($1,000), both per NC rate manual PR-1.
+
+---
+
 ## Recent Updates (2/4/2026)
 
 **NC Reissue Discount Fix:**
@@ -216,7 +226,7 @@ Today's changes:
   - Multiple variants per form now supported (e.g., T-19.1 has 4 variants with different rates)
   - Added `form_code` field for display, `code` field for unique lookup
 - **TX CPL**: Not applicable (no charge)
-- **No liability rounding for TX**: Texas uses exact liability amounts (unlike CA/NC which round up to next $10,000)
+- **No liability rounding for TX**: Texas uses exact liability amounts (unlike CA which rounds to $10,000 or NC which rounds to $1,000)
 
 ---
 
@@ -308,7 +318,7 @@ bundle exec bin/ratenode calculate \
   --underwriter TRG \
   --purchase_price=500000 \
   --loan_amount=400000 \
-  --policy_type=homeowner
+  --policy_type=homeowners
 
 # Refinance transaction
 bundle exec bin/ratenode calculate \
@@ -410,7 +420,7 @@ bundle exec bin/ratenode calculate \
   --state AZ \
   --underwriter TRG \
   --purchase_price=500000 \
-  --policy_type=homeowners \
+  --policy_type=homeownerss \
   --county=Maricopa
 
 # Arizona TRG Hold-Open Initial (premium + 25% fee)
@@ -469,7 +479,7 @@ result = RateNode.calculate(
   transaction_type: :purchase,
   purchase_price_cents: 50_000_000,   # $500,000
   loan_amount_cents: 40_000_000,      # $400,000
-  owner_policy_type: :standard,       # :standard, :homeowner, :extended
+  owner_policy_type: :standard,       # :standard, :homeowners, :extended
   include_lenders_policy: true,
   endorsement_codes: ['CLTA 115', 'ALTA 4.1'],
   as_of_date: Date.today              # Optional, defaults to today
@@ -812,8 +822,13 @@ FL endorsements use two special pricing types:
 
 ### Key Rounding Rules
 
-**California and North Carolina:**
+**California:**
 - Liability rounded UP to next $10,000 before rate lookup/calculation
+- Final premium rounded to nearest dollar
+
+**North Carolina:**
+- Liability rounded UP to next $1,000 before rate lookup/calculation (per rate manual PR-1)
+- Minimum premium of $56.00 enforced
 - Final premium rounded to nearest dollar
 
 **Florida:**
