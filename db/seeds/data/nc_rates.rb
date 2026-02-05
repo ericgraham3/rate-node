@@ -50,52 +50,11 @@ module RateNode
         { min: 10_000_001, max: nil, rate: 7_920 }
       ].freeze
 
+      # NC endorsements per rate manual PR-10: exactly three endorsements at $23.00 flat each
       ENDORSEMENTS = [
-        { code: "CLTA 100", name: "Restrictions, Encroachments & Minerals (Owner Standard)", pricing_type: "percentage", percentage: 0.30, owner_only: true },
-        { code: "CLTA 100.1", name: "Restrictions, Encroachments & Minerals (Lender Standard)", pricing_type: "percentage", percentage: 0.25, lender_only: true },
-        { code: "ALTA 9", name: "Restrictions, Encroachments, Minerals", pricing_type: "flat", base_amount: 2300 },
-        { code: "ALTA 9.3", name: "Covenants, Conditions and Restrictions - Loan Policy", pricing_type: "no_charge", lender_only: true },
-        { code: "CLTA 103.7", name: "Land Abuts Street", pricing_type: "flat", base_amount: 2750 },
-        { code: "ALTA 17", name: "Access and Entry", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 17.1", name: "Indirect Access and Entry", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 17.2", name: "Utility Access", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 4", name: "Condominium (Lender)", pricing_type: "no_charge", lender_only: true },
-        { code: "ALTA 4.1", name: "Condominium (Owner/Lender)", pricing_type: "no_charge" },
         { code: "ALTA 5", name: "Planned Unit Development", pricing_type: "flat", base_amount: 2300 },
-        { code: "ALTA 5.1", name: "Planned Unit Development (Owner/Lender)", pricing_type: "no_charge" },
-        { code: "ALTA 6", name: "Variable Rate Mortgage", pricing_type: "no_charge", lender_only: true },
-        { code: "ALTA 6.2", name: "Variable Rate Mortgage, Negative Amortization", pricing_type: "no_charge", lender_only: true },
-        { code: "ALTA 8.1", name: "Environmental Lien Protection", pricing_type: "flat", base_amount: 2300 },
-        { code: "ALTA 8.2", name: "Environmental Protection Lien (Owner)", pricing_type: "flat", base_amount: 11000, owner_only: true },
-        { code: "CLTA 115", name: "Condominium", pricing_type: "flat", base_amount: 2750 },
-        { code: "CLTA 116", name: "Designation of Improvements, Address", pricing_type: "no_charge", notes: "No charge if concurrent, 10% if subsequent" },
-        { code: "ALTA 22", name: "Location", pricing_type: "no_charge", notes: "No charge if concurrent, 10% if subsequent" },
-        { code: "ALTA 22.1", name: "Location and Map", pricing_type: "no_charge", notes: "No charge if concurrent, 10% if subsequent" },
-        { code: "CLTA 116.7", name: "Subdivision Map Act Compliance", pricing_type: "flat", base_amount: 2750 },
-        { code: "ALTA 26", name: "Subdivision", pricing_type: "flat", base_amount: 2750 },
-        { code: "ALTA 18", name: "Single Tax Parcel", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 18.1", name: "Multiple Tax Parcel", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 19", name: "Contiguity, Multiple Parcels", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 19.1", name: "Contiguity, Single Parcel", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 25", name: "Same as Survey", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 25.1", name: "Same as Portion of Survey", pricing_type: "flat", base_amount: 11000 },
-        { code: "ALTA 28", name: "Easement, Damage or Enforced Removal (Owner)", pricing_type: "percentage", percentage: 0.20, owner_only: true },
-        { code: "ALTA 28 LENDER", name: "Easement, Damage or Enforced Removal (Lender)", pricing_type: "flat", base_amount: 2750, lender_only: true },
-        { code: "CLTA 123.1", name: "Zoning - Unimproved Land", pricing_type: "percentage", percentage: 0.10, min: 11000 },
-        { code: "ALTA 3", name: "Zoning - Unimproved Land", pricing_type: "percentage", percentage: 0.10, min: 11000 },
-        { code: "ALTA 3.1", name: "Zoning - Improved Land", pricing_type: "percentage", percentage: 0.15, min: 11000 },
-        { code: "CLTA 127", name: "Nonimputation - Full Equity Transfer", pricing_type: "flat", base_amount: 11000, owner_only: true },
-        { code: "ALTA 15", name: "Nonimputation - Full Equity Transfer", pricing_type: "flat", base_amount: 11000, owner_only: true },
-        { code: "ALTA 15.1", name: "Nonimputation - Additional Insured", pricing_type: "flat", base_amount: 11000, owner_only: true },
-        { code: "ALTA 15.2", name: "Nonimputation - Partial Equity Transfer", pricing_type: "flat", base_amount: 11000, owner_only: true },
-        { code: "CLTA 101", name: "Mechanics' Liens (Lender Standard)", pricing_type: "percentage", percentage: 0.10, lender_only: true },
-        { code: "CLTA 101.1", name: "Mechanics' Liens (Owner)", pricing_type: "percentage", percentage: 0.25, owner_only: true },
-        { code: "CLTA 102.4", name: "Foundation (Lender)", pricing_type: "percentage", percentage: 0.10, max: 55000, lender_only: true },
-        { code: "CLTA 102.5", name: "Foundation (Lender ALTA)", pricing_type: "percentage", percentage: 0.15, min: 11000, max: 110000, lender_only: true },
-        { code: "ALTA 7", name: "Manufactured Housing Unit", pricing_type: "flat", base_amount: 2750 },
-        { code: "ALTA 7.1", name: "Manufactured Housing - Conversion (Loan)", pricing_type: "flat", base_amount: 2750, lender_only: true },
-        { code: "ALTA 7.2", name: "Manufactured Housing - Conversion (Owner)", pricing_type: "flat", base_amount: 2750, owner_only: true },
-        { code: "CLTA 150", name: "Solar", pricing_type: "flat", base_amount: 11000, lender_only: true }
+        { code: "ALTA 8.1", name: "Environmental Protection Lien (Owner)", pricing_type: "flat", base_amount: 2300 },
+        { code: "ALTA 9", name: "Restrictions, Encroachments, Minerals", pricing_type: "flat", base_amount: 2300 }
       ].freeze
 
       # CPL (Closing Protection Letter) Rates - Tiered structure

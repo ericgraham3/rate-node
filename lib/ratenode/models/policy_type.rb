@@ -8,14 +8,14 @@ module RateNode
       # Default types (used for CA/TRG)
       TYPES = {
         standard: { name: "standard", multiplier: 1.00 },
-        homeowner: { name: "homeowner", multiplier: 1.10 },
+        homeowners: { name: "homeowners", multiplier: 1.10 },
         extended: { name: "extended", multiplier: 1.25 }
       }.freeze
 
       # NC-specific multipliers
       NC_TYPES = {
         standard: { name: "standard", multiplier: 1.00 },
-        homeowner: { name: "homeowner", multiplier: 1.20 },
+        homeowners: { name: "homeowners", multiplier: 1.20 },
         extended: { name: "extended", multiplier: 1.20 }
       }.freeze
 

@@ -19,7 +19,7 @@ module RateNode
   #     rounding_increment_cents     - Amount to round to (default 1_000_000 = $10,000)
   #     has_reissue_rate_table       - Whether state has separate reissue rate table (FL)
   #     minimum_premium_cents        - Minimum premium for any policy
-  #     policy_type_multipliers      - Multipliers for policy types (standard, homeowner, extended)
+  #     policy_type_multipliers      - Multipliers for policy types (standard, homeowners, extended)
   #
   STATE_RULES = {
     "CA" => {
@@ -41,7 +41,7 @@ module RateNode
           minimum_premium_cents: 0,
           policy_type_multipliers: {
             standard: 1.00,
-            homeowner: 1.10,
+            homeowners: 1.10,
             extended: 1.25
           }
         }
@@ -61,12 +61,12 @@ module RateNode
           reissue_discount_percent: 0.50,           # 50%
           reissue_eligibility_years: 15,
           rounds_liability: true,
-          rounding_increment_cents: 1_000_000,      # $10,000
+          rounding_increment_cents: 100_000,        # $1,000 (per NC rate manual PR-1)
           has_reissue_rate_table: false,
-          minimum_premium_cents: 0,
+          minimum_premium_cents: 5_600,             # $56.00 (per NC rate manual PR-1)
           policy_type_multipliers: {
             standard: 1.00,
-            homeowner: 1.20,
+            homeowners: 1.20,
             extended: 1.20
           }
         }
@@ -91,7 +91,7 @@ module RateNode
           minimum_premium_cents: 0,
           policy_type_multipliers: {
             standard: 1.00,
-            homeowner: 1.10,
+            homeowners: 1.10,
             extended: 1.25
           }
         }
@@ -116,7 +116,7 @@ module RateNode
           minimum_premium_cents: 10_000,            # $100 minimum premium
           policy_type_multipliers: {
             standard: 1.00,
-            homeowner: 1.10,
+            homeowners: 1.10,
             extended: 1.25
           }
         }
