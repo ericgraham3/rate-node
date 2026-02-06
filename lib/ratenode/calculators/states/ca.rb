@@ -169,6 +169,11 @@ module RateNode
 
       def calculate_standard
         base_rate = lookup_base_rate(@liability_cents)
+
+        # Apply minimum premium floor before multiplier
+        minimum = state_rules[:minimum_premium_cents] || 0
+        base_rate = [base_rate, minimum].max
+
         multiplier = Models::PolicyType.multiplier_for(@policy_type, state: "CA", underwriter: @underwriter, as_of_date: @as_of_date)
         (base_rate * multiplier).round
       end
@@ -177,6 +182,11 @@ module RateNode
         # Hold-open initial: standard premium + 10% surcharge of base rate (OR Rate)
         # Formula: base_rate × policy_type_multiplier + base_rate × surcharge_percent
         base_rate = lookup_base_rate(@liability_cents)
+
+        # Apply minimum premium floor before multiplier/surcharge
+        minimum = state_rules[:minimum_premium_cents] || 0
+        base_rate = [base_rate, minimum].max
+
         multiplier = Models::PolicyType.multiplier_for(@policy_type, state: "CA", underwriter: @underwriter, as_of_date: @as_of_date)
         surcharge_percent = state_rules[:hold_open_surcharge_percent]
 

@@ -38,7 +38,7 @@ module RateNode
           rounds_liability: true,
           rounding_increment_cents: 1_000_000,      # $10,000
           has_reissue_rate_table: false,
-          minimum_premium_cents: 0,
+          minimum_premium_cents: 60_900,             # $609 (TRG rate manual line 36)
           policy_type_multipliers: {
             standard: 1.00,
             homeowners: 1.10,
@@ -52,7 +52,16 @@ module RateNode
           # Hold-open / binder support (TRG CA rate manual Section 1.2)
           supports_hold_open: true,
           hold_open_surcharge_percent: 0.10,        # 10% of base rate (OR Schedule)
-          hold_open_eligibility_years: 2
+          hold_open_eligibility_years: 2,
+          # Over-$3M owner premium formula (TRG rate manual line 65)
+          over_3m_base_cents: 421_100,               # $4,211
+          over_3m_per_10k_cents: 525,                # $5.25 per $10K increment
+          # ELC over-$3M formula (TRG rate manual, clarification)
+          elc_over_3m_base_cents: 247_200,           # $2,472
+          elc_over_3m_per_10k_cents: 420,            # $4.20 per $10K increment
+          # Refinance over-$10M formula (TRG rate manual line 298)
+          refinance_over_10m_base_cents: 720_000,    # $7,200
+          refinance_over_10m_per_million_cents: 80_000 # $800 per million
         },
         "ORT" => {
           concurrent_base_fee_cents: 15_000,        # $150
@@ -62,7 +71,7 @@ module RateNode
           rounds_liability: true,
           rounding_increment_cents: 1_000_000,      # $10,000
           has_reissue_rate_table: false,
-          minimum_premium_cents: 0,
+          minimum_premium_cents: 72_500,             # $725 (ORT rate manual line 37)
           policy_type_multipliers: {
             standard: 1.00,
             homeowners: 1.10,
@@ -76,7 +85,16 @@ module RateNode
           # Hold-open / binder support (ORT CA rate manual Section 1.2)
           supports_hold_open: true,
           hold_open_surcharge_percent: 0.10,        # 10% of OR Insurance Rate
-          hold_open_eligibility_years: 2
+          hold_open_eligibility_years: 2,
+          # Over-$3M owner premium formula (ORT rate manual line 75)
+          over_3m_base_cents: 443_800,               # $4,438
+          over_3m_per_10k_cents: 600,                # $6.00 per $10K increment
+          # ELC over-$3M formula (ORT rate manual line 327)
+          elc_over_3m_base_cents: 255_000,           # $2,550
+          elc_over_3m_per_10k_cents: 300,            # $3.00 per $10K increment
+          # Refinance over-$10M formula (ORT rate manual Section 2.3)
+          refinance_over_10m_base_cents: 761_000,    # $7,610
+          refinance_over_10m_per_million_cents: 100_000 # $1,000 per million
         },
         "DEFAULT" => {
           concurrent_base_fee_cents: 15_000,        # $150
