@@ -2,6 +2,7 @@
 
 require "date"
 require_relative "data/ca_rates"
+require_relative "data/ca_ort_rates"
 require_relative "data/nc_rates"
 require_relative "data/tx_rates"
 require_relative "data/fl_rates"
@@ -18,9 +19,26 @@ module RateNode
         seed_az
       end
 
-      # California - TRG
+      # California - TRG and ORT underwriters
       def self.seed_ca
+        seed_ca_trg
+        seed_ca_ort
+      end
+
+      # California - TRG
+      def self.seed_ca_trg
         state = CA
+
+        seed_rate_tiers(state, rate_type: "premium")
+        seed_refinance_rates(state)
+        seed_policy_types(state)
+        seed_endorsements(state)
+        seed_cpl_rates(state)
+      end
+
+      # California - ORT
+      def self.seed_ca_ort
+        state = CA_ORT
 
         seed_rate_tiers(state, rate_type: "premium")
         seed_refinance_rates(state)

@@ -2,6 +2,17 @@
 
 ## Recent Updates (2/5/2026)
 
+**CA Lender Policy & Hold-Open Fixes (007-fix-ca-lender):**
+
+- **Added ORT rate seed data for California**: Created `db/seeds/data/ca_ort_rates.rb` with 96 rate tiers ($0 to $3M+), 15 refinance rates, and 44 endorsements. Key difference from TRG: ALTA 8.1 is $25 flat (TRG is no\_charge), standalone lender multipliers are 75%/85% (TRG is 80%/90%), concurrent standard excess is 75% (TRG is 80%). Wired into `db/seeds/rates.rb` following the same dual-underwriter pattern as AZ.
+- **Fixed `lender_policy_type` not passing through Calculator pipeline**: The `Calculator` class now forwards `lender_policy_type` (`:standard` or `:extended`) to `Calculators::LendersPolicy`, enabling correct concurrent ELC lookups for extended lender policies and proper standalone multiplier selection. Previously all lender policies defaulted to `:standard` regardless of input.
+- **Implemented CA hold-open/binder support**: Added hold-open calculation to the CA state calculator matching the structure documented in both TRG and ORT rate manuals:
+  - **Initial**: Standard premium + 10% surcharge on base rate (OR Insurance Rate)
+  - **Final**: Incremental premium (new standard premium minus prior standard premium, minimum $0)
+  - Added `supports_hold_open`, `hold_open_surcharge_percent` (0.10), and `hold_open_eligibility_years` (2) to both CA TRG and ORT in `state_rules.rb`
+- **Generalized hold-open support across states**: Removed AZ-only hold-open guard in `Calculator`; the normal flow via `include_lenders_policy` already handles all states correctly. Updated CSV test spec to pass `is_hold_open` for all states (not just AZ).
+- **48 test scenarios passing** (12 CA, 16 AZ, 6 FL, 3 NC, 11 TX) including 20 CA-specific unit tests
+
 **Explicit Seed Unit Declaration (006-explicit-seed-units):**
 
 - **Replaced the value-inspection heuristic in the shared rate-tier seeder with explicit unit declarations**: Each state module that routes through `seed_rate_tiers()` now declares its unit convention via a `RATE_TIERS_UNIT` constant co-located with the rate data. NC and CA declare `:dollars` (values are multiplied by 100 before insertion); TX declares `:cents` (values are inserted as-is). The old heuristic (`first tier min >= 100_000 → assume cents`) has been removed entirely.
@@ -70,7 +81,7 @@
   - `--prior_policy_date` - Prior policy date (for reissue eligibility)
   - `--cpl` - Include Closing Protection Letter
   - `--county` - County name (for AZ region/area lookup)
-  - `--hold_open` - Hold-open transaction (AZ only)
+  - `--hold_open` - Hold-open transaction (AZ TRG, CA TRG/ORT)
 
 - **37 test scenarios** passing
 
@@ -259,7 +270,7 @@ Today's changes:
 
 ---
 
-Multi-state title insurance premium calculator supporting multiple states and underwriters with date-based rate versioning. Currently includes California (TRG), North Carolina (Chicago Title/TRG), Texas (promulgated rates), Florida (TRG), and Arizona (TRG/ORT) rate tables.
+Multi-state title insurance premium calculator supporting multiple states and underwriters with date-based rate versioning. Currently includes California (TRG/ORT), North Carolina (Chicago Title/TRG), Texas (promulgated rates), Florida (TRG), and Arizona (TRG/ORT) rate tables.
 
 ## Setup
 
@@ -301,6 +312,7 @@ db/seeds/
 ├── rates.rb                    # Seed loader (calls state-specific seeders)
 └── data/
     ├── ca_rates.rb             # California: TRG rates (effective 2024-01-01)
+    ├── ca_ort_rates.rb         # California: ORT rates (effective 2025-03-17)
     ├── nc_rates.rb             # North Carolina: TRG/Chicago Title (effective 2025-10-01)
     ├── tx_rates.rb             # Texas: Promulgated rates (effective 2019-09-01)
     ├── fl_rates.rb             # Florida: TRG rates (effective 2025-01-01)
@@ -461,6 +473,36 @@ bundle exec bin/ratenode calculate \
   --purchase_price=500000 \
   --county=Maricopa
 
+# California ORT (different rate schedule)
+bundle exec bin/ratenode calculate \
+  --state CA \
+  --underwriter ORT \
+  --purchase_price=500000 \
+  --loan_amount=400000
+
+# California TRG Hold-Open Initial (premium + 10% base rate surcharge)
+bundle exec bin/ratenode calculate \
+  --state CA \
+  --underwriter TRG \
+  --purchase_price=500000 \
+  --hold_open
+
+# California TRG Hold-Open Final (new premium - prior premium)
+bundle exec bin/ratenode calculate \
+  --state CA \
+  --underwriter TRG \
+  --purchase_price=600000 \
+  --prior_policy_amount=500000 \
+  --hold_open
+
+# California with extended lender policy (ELC concurrent rate)
+bundle exec bin/ratenode calculate \
+  --state CA \
+  --underwriter TRG \
+  --purchase_price=500000 \
+  --loan_amount=400000 \
+  --lender_policy_type=extended
+
 # With specific effective date (for historical calculations)
 bundle exec bin/ratenode calculate \
   --state CA \
@@ -497,6 +539,39 @@ result = RateNode.calculate(
   include_lenders_policy: true,
   endorsement_codes: ['CLTA 115', 'ALTA 4.1'],
   as_of_date: Date.today              # Optional, defaults to today
+)
+
+# California ORT (different standalone/concurrent multipliers)
+result_ca_ort = RateNode.calculate(
+  state: "CA",
+  underwriter: "ORT",
+  transaction_type: :purchase,
+  purchase_price_cents: 50_000_000,   # $500,000
+  loan_amount_cents: 40_000_000,      # $400,000
+  owner_policy_type: :standard,
+  include_lenders_policy: true,
+  lender_policy_type: :extended       # Uses ELC rate table for concurrent
+)
+
+# California TRG Hold-Open Initial (premium + 10% surcharge on base rate)
+result_ca_hold_open = RateNode.calculate(
+  state: "CA",
+  underwriter: "TRG",
+  transaction_type: :purchase,
+  purchase_price_cents: 50_000_000,   # $500,000
+  is_hold_open: true
+)
+
+# California TRG Hold-Open Final (incremental premium)
+result_ca_hold_open_final = RateNode.calculate(
+  state: "CA",
+  underwriter: "TRG",
+  transaction_type: :purchase,
+  purchase_price_cents: 60_000_000,     # $600,000 (new amount)
+  prior_policy_amount_cents: 50_000_000, # $500,000 (original hold-open)
+  loan_amount_cents: 45_000_000,        # $450,000 (loan at closing)
+  include_lenders_policy: true,
+  is_hold_open: true
 )
 
 # North Carolina Chicago Title (TRG) with CPL and reissue discount
@@ -711,6 +786,11 @@ FL uses a tiered calculation (similar to NC) with separate original and reissue 
 - Over $1,000,000: $3,257 base + $2.00 per thousand above $1M
 - Minimum premium: $830
 
+**CA Hold-Open** (TRG and ORT):
+- Initial: Standard premium + 10% surcharge on base rate (OR Insurance Rate)
+- Final: New standard premium minus prior standard premium (minimum $0)
+- No lender policy issued during hold-open
+
 **AZ Hold-Open** (TRG only):
 - Initial: Standard premium + 25% fee (minimum $250)
 - Final: New premium at increased liability minus prior premium credit
@@ -730,12 +810,15 @@ TX uses formula-based calculation for policies over $100,000 (2019 rates, effect
 
 ### Lender's Policies
 
-**California (TRG):**
-| Scenario | Rate |
-|----------|------|
-| Concurrent (loan ≤ owner liability) | $150 flat |
-| Concurrent (loan > owner liability) | $150 + Extended Lenders Concurrent Rate for excess |
-| Refinance (1-4 family residential) | Special flat rate table |
+**California (TRG and ORT):**
+| Scenario | TRG Rate | ORT Rate |
+|----------|----------|----------|
+| Concurrent Standard (loan ≤ owner) | $150 flat | $150 flat |
+| Concurrent Standard (loan > owner) | $150 + 80% of rate difference | $150 + 75% of rate difference |
+| Concurrent Extended | Full ELC rate table lookup | Full ELC rate table lookup |
+| Standalone Standard | 80% of base rate | 75% of base rate |
+| Standalone Extended | 90% of base rate | 85% of base rate |
+| Refinance (1-4 family residential) | Special flat rate table | Special flat rate table |
 
 **North Carolina (Chicago Title/TRG):**
 | Scenario | Rate |
@@ -792,10 +875,10 @@ TX uses formula-based calculation for policies over $100,000 (2019 rates, effect
 
 ### Endorsement Pricing
 
-Some endorsements have state-specific pricing:
-- **ALTA 5** (Planned Unit Development): No charge (CA) | $23.00 flat (NC)
-- **ALTA 8.1** (Environmental Lien Protection): No charge (CA) | $23.00 flat (NC)
-- **ALTA 9** (Restrictions, Encroachments, Minerals): No charge (CA) | $23.00 flat (NC)
+Some endorsements have state- and underwriter-specific pricing:
+- **ALTA 5** (Planned Unit Development): No charge (CA TRG) | No charge (CA ORT) | $23.00 flat (NC)
+- **ALTA 8.1** (Environmental Lien Protection): No charge (CA TRG) | $25.00 flat (CA ORT) | $23.00 flat (NC)
+- **ALTA 9** (Restrictions, Encroachments, Minerals): No charge (CA TRG) | No charge (CA ORT) | $23.00 flat (NC)
 
 **Texas Endorsements:**
 TX endorsements use a unique code system (not form numbers) because many forms have multiple rate variants:
@@ -893,7 +976,7 @@ Add a row to `spec/fixtures/scenarios_input.csv` with columns:
 - `prior_policy_amount`, `prior_policy_date` - For reissue discount or hold-open final
 - `owners_policy_type`, `lender_policy_type` - standard, homeowners, extended
 - `endorsements` - Comma-separated codes
-- `is_hold_open` - TRUE/FALSE (AZ TRG only)
+- `is_hold_open` - TRUE/FALSE (AZ TRG, CA TRG, CA ORT)
 - `cpl` - TRUE/FALSE
 - `property_type` - residential or commercial (for FL endorsements)
 - `expected_*` - Expected values for validation

@@ -35,5 +35,15 @@ NC_purchase_loan_reissue,NC,TRG,purchase,500000,400000,200000,01/01/2024,standar
 NC_purchase_loan,NC,TRG,purchase,500000,400000,,,standard,standard,"ALTA 8.1, ALTA 9",,FALSE,,1146,28.5,46,,,1220.5
 NC_purchase_cash,NC,TRG,purchase,500000,,,,standard,,,,,,1146,,,,,1146
 NC_purchase_loan_exceeds_owner,NC,TRG,purchase,300000,350000,,,standard,standard,,,FALSE,,820.5,28.5,,,,849
-CA_purchase_cash,CA,TRG,purchase,500000,,,,standard,,,,,,1571,,,,,1571
-CA_purchase_loan,CA,TRG,purchase,500000,400000,,,standard,standard,"ALTA 5.1, ALTA 8.1, ALTA 9",,FALSE,,1571,150,0,,,1721
+CA_TRG_cash_standard,CA,TRG,purchase,500000,,,,standard,,,,,,1571,,,,,1571
+CA_ORT_cash_homeowners,CA,ORT,purchase,500000,,,,homeowners,,,,,,1760,,,,,1760
+CA_ORT_cash_standard,CA,ORT,purchase,500000,,,,standard,,,,,,1600,,,,,1600
+CA_ORT_cash_extended,CA,ORT,purchase,500000,,,,extended,,,,,,2000,,,,,2000
+CA_ORT_simul,CA,ORT,purchase,500000,400000,,,standard,extended,"ALTA 5, ALTA 8.1, ALTA 9",,,,1600,852,25,,,2477
+CA_ORT_simul_excess,CA,ORT,purchase,400000,500000,,,standard,extended,,,,,1390,1015,,,,2405
+CA_TRG_cash_extended,CA,TRG,purchase,500000,,,,extended,,,,,,1964,,,,,1964
+CA_TRG_cash_homeowners,CA,TRG,purchase,500000,,,,homeowners,,,,,,1729,,,,,1729
+CA_TRG_hold_open_initial,CA,TRG,purchase,500000,,,,standard,,,TRUE,,,1728.1,,,,,1728.1
+CA_TRG_hold_open_final,CA,TRG,purchase,600000,575000,500000,01/01/2024,standard,extended,,TRUE,,,162,1080,,,,1242
+CA_TRG_simul,CA,TRG,purchase,500000,400000,,,standard,extended,,,,,1571,856,,,,2427
+CA_TRG_simul_excess,CA,TRG,purchase,400000,500000,,,standard,extended,,,,,1372,996,,,,2368
