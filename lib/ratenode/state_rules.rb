@@ -30,6 +30,54 @@ module RateNode
 
       # Underwriters
       underwriters: {
+        "TRG" => {
+          concurrent_base_fee_cents: 15_000,        # $150
+          concurrent_uses_elc: true,
+          reissue_discount_percent: 0.0,
+          reissue_eligibility_years: nil,
+          rounds_liability: true,
+          rounding_increment_cents: 1_000_000,      # $10,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowners: 1.10,
+            extended: 1.25
+          },
+          # Standalone lender policy multipliers (TRG CA rate manual pp. 182-184)
+          standalone_lender_standard_percent: 80.0,
+          standalone_lender_extended_percent: 90.0,
+          # Concurrent Standard excess percentage (TRG CA rate manual pp. 203-206)
+          concurrent_standard_excess_percent: 80.0,
+          # Hold-open / binder support (TRG CA rate manual Section 1.2)
+          supports_hold_open: true,
+          hold_open_surcharge_percent: 0.10,        # 10% of base rate (OR Schedule)
+          hold_open_eligibility_years: 2
+        },
+        "ORT" => {
+          concurrent_base_fee_cents: 15_000,        # $150
+          concurrent_uses_elc: true,
+          reissue_discount_percent: 0.0,
+          reissue_eligibility_years: nil,
+          rounds_liability: true,
+          rounding_increment_cents: 1_000_000,      # $10,000
+          has_reissue_rate_table: false,
+          minimum_premium_cents: 0,
+          policy_type_multipliers: {
+            standard: 1.00,
+            homeowners: 1.10,
+            extended: 1.25
+          },
+          # Standalone lender policy multipliers (ORT CA rate manual pp. 258-262)
+          standalone_lender_standard_percent: 75.0,
+          standalone_lender_extended_percent: 85.0,
+          # Concurrent Standard excess percentage (ORT CA rate manual pp. 293-298)
+          concurrent_standard_excess_percent: 75.0,
+          # Hold-open / binder support (ORT CA rate manual Section 1.2)
+          supports_hold_open: true,
+          hold_open_surcharge_percent: 0.10,        # 10% of OR Insurance Rate
+          hold_open_eligibility_years: 2
+        },
         "DEFAULT" => {
           concurrent_base_fee_cents: 15_000,        # $150
           concurrent_uses_elc: true,

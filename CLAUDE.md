@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-03
 - SQLite with Sequel ORM — rate tiers queried via `Models::RateTier.calculate_rate` (005-fix-nc-simul-premium)
 - Ruby 3.4.8 + Sequel ORM, thor ~> 1.3, sqlite3 ~> 1.6 (006-explicit-seed-units)
 - SQLite database with `rate_tiers` table (006-explicit-seed-units)
+- Ruby 3.4.8 + Sequel ORM, thor ~> 1.3, sqlite3 ~> 1.6, rspec ~> 3.12 (007-fix-ca-lender)
+- SQLite database with rate_tiers table for tiered rate lookups (007-fix-ca-lender)
 
 - Ruby 3.4.8 + sqlite3 ~> 1.6, thor ~> 1.3, csv (stdlib), rspec ~> 3.12 (001-extract-state-calculators)
 
@@ -29,9 +31,9 @@ tests/
 Ruby 3.4.8: Follow standard conventions
 
 ## Recent Changes
+- 007-fix-ca-lender: Added Ruby 3.4.8 + Sequel ORM, thor ~> 1.3, sqlite3 ~> 1.6, rspec ~> 3.12
 - 006-explicit-seed-units: Added Ruby 3.4.8 + Sequel ORM, thor ~> 1.3, sqlite3 ~> 1.6
 - 005-fix-nc-simul-premium: Added Ruby 3.4.8 + thor ~> 1.3, sqlite3 ~> 1.6, csv (stdlib)
-- 004-fix-nc-config: Added Ruby 3.4.8 + sqlite3 ~> 1.6, thor ~> 1.3, csv (stdlib), rspec ~> 3.12
 
 
 <!-- MANUAL ADDITIONS START -->

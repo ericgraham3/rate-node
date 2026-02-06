@@ -157,12 +157,19 @@ RSpec.describe "CSV Scenario Testing" do
       # Property type (for FL endorsements)
       params[:property_type] = scenario[:property_type] if scenario[:property_type]
 
-      # AZ-specific: county and hold-open
+      # Lender policy type (CA uses extended concurrent ELC vs standard excess)
+      if scenario[:lender_policy_type]
+        params[:lender_policy_type] = scenario[:lender_policy_type].to_sym
+      end
+
+      # Hold-open / binder support (AZ and CA)
+      params[:is_hold_open] = scenario[:is_hold_open]
+
+      # AZ-specific: county
       if state == "AZ"
         params[:county] = county_from_scenario_name(scenario[:name], state)
-        params[:is_hold_open] = scenario[:is_hold_open]
 
-        # For hold-open final (has prior_policy_amount but no prior_policy_date)
+        # For AZ hold-open final (has prior_policy_amount but no prior_policy_date)
         if scenario[:prior_policy_amount] && !scenario[:prior_policy_date]
           params[:prior_policy_amount_cents] = scenario[:prior_policy_amount] * 100
         end
