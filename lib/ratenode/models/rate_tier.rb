@@ -5,8 +5,6 @@ require "date"
 module RateNode
   module Models
     class RateTier
-      OVER_3M_BASE_CENTS = 421_100
-      OVER_3M_PER_10K_CENTS = 525
       THREE_MILLION_CENTS = 300_000_000
 
       attr_reader :id, :min_liability_cents, :max_liability_cents,
@@ -69,7 +67,7 @@ module RateNode
         end
 
         # CA-specific: use $3M+ calculation for large policies
-        return calculate_over_3m_rate(liability_cents) if liability_cents > THREE_MILLION_CENTS && state != "TX" && state != "FL"
+        return calculate_over_3m_rate(liability_cents, state: state, underwriter: underwriter) if liability_cents > THREE_MILLION_CENTS && state == "CA"
 
         # Get all tiers to check if we should use tiered calculation
         tiers = all_tiers(state: state, underwriter: underwriter, as_of_date: as_of_date, rate_type: rate_type, rate_table: rate_table)
@@ -114,7 +112,7 @@ module RateNode
       end
 
       def self.calculate_extended_lender_concurrent_rate(liability_cents, state:, underwriter:, as_of_date: Date.today)
-        return calculate_elc_over_3m(liability_cents) if liability_cents > THREE_MILLION_CENTS
+        return calculate_elc_over_3m_rate(liability_cents, state: state, underwriter: underwriter) if liability_cents > THREE_MILLION_CENTS
 
         tier = find_by_liability(liability_cents, state: state, underwriter: underwriter, as_of_date: as_of_date)
         return 0 unless tier
@@ -122,16 +120,24 @@ module RateNode
         tier.extended_lender_concurrent_cents || 0
       end
 
-      def self.calculate_over_3m_rate(liability_cents)
+      def self.calculate_over_3m_rate(liability_cents, state:, underwriter:)
+        rules = RateNode.rules_for(state, underwriter: underwriter)
+        base = rules[:over_3m_base_cents]
+        rate_per_10k = rules[:over_3m_per_10k_cents]
+
         excess = liability_cents - THREE_MILLION_CENTS
         increments = (excess / 1_000_000.0).ceil
-        OVER_3M_BASE_CENTS + (increments * OVER_3M_PER_10K_CENTS)
+        base + (increments * rate_per_10k)
       end
 
-      def self.calculate_elc_over_3m(liability_cents)
+      def self.calculate_elc_over_3m_rate(liability_cents, state:, underwriter:)
+        rules = RateNode.rules_for(state, underwriter: underwriter)
+        base = rules[:elc_over_3m_base_cents]
+        rate_per_10k = rules[:elc_over_3m_per_10k_cents]
+
         excess = liability_cents - THREE_MILLION_CENTS
         increments = (excess / 1_000_000.0).ceil
-        75 + (increments * 75)
+        base + (increments * rate_per_10k)
       end
 
       # AZ-specific rate calculation

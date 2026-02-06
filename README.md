@@ -2,6 +2,15 @@
 
 ## Recent Updates (2/5/2026)
 
+**CA Over-$3M Formulas & Minimum Premium (008-fix-ca-3m-formulas):**
+
+- **Fixed over-$3M owner premium calculations**: Replaced hardcoded TRG-only constants with underwriter-specific formula parameters in `state_rules.rb`. TRG and ORT now produce correct, different premiums for properties above $3M (e.g., TRG $3.5M = $4,473.50, ORT $3.5M = $4,738).
+- **Fixed ELC over-$3M calculation**: The Extended Lender Concurrent formula was producing cents instead of dollars (~99% too low). Now correctly returns premiums in thousands of dollars for both underwriters.
+- **Added minimum premium enforcement**: TRG minimum $609, ORT minimum $725. Applied to base rate before policy-type multipliers and hold-open surcharges.
+- **Added refinance over-$10M formula**: CA-specific progressive refinance rates above $10M (TRG: $7,200 base + $800/million, ORT: $7,610 base + $1,000/million).
+- **Boundary conditions**: Amounts at exactly $3M and $10M use tier lookup; formula applies only for amounts strictly above thresholds.
+- **36 unit tests, 48 CSV scenarios passing** with zero regressions across all states.
+
 **CA Lender Policy & Hold-Open Fixes (007-fix-ca-lender):**
 
 - **Added ORT rate seed data for California**: Created `db/seeds/data/ca_ort_rates.rb` with 96 rate tiers ($0 to $3M+), 15 refinance rates, and 44 endorsements. Key difference from TRG: ALTA 8.1 is $25 flat (TRG is no\_charge), standalone lender multipliers are 75%/85% (TRG is 80%/90%), concurrent standard excess is 75% (TRG is 80%). Wired into `db/seeds/rates.rb` following the same dual-underwriter pattern as AZ.
